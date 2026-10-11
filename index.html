@@ -1,0 +1,470 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sayı Tahmin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Figtree:wght@400;500;700&display=swap">
+<style>
+  /* Layout: tek sütun masa; oyun sırasında iki oyuncunun tahmin defteri yan yana (telefonda alt alta). */
+  :root {
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --ink: #17202b;
+    --muted: #5d6877;
+    --line: #d5dbe3;
+    --accent: #2f4fd6;
+    --accent-ink: #ffffff;
+    --green: #1f9d55;
+    --yellow: #e0a800;
+    --red: #d6453d;
+    --tile-ink: #ffffff;
+    --font-display: "Chakra Petch", "Courier New", monospace;
+    --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151c; --surface: #19212b; --ink: #e8edf3; --muted: #93a0b0; --line: #2b3643;
+      --accent: #7b93ff; --accent-ink: #0d1220;
+      --green: #2fb36a; --yellow: #e8b622; --red: #e0564e; --tile-ink: #0d1220;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151c; --surface: #19212b; --ink: #e8edf3; --muted: #93a0b0; --line: #2b3643;
+    --accent: #7b93ff; --accent-ink: #0d1220;
+    --green: #2fb36a; --yellow: #e8b622; --red: #e0564e; --tile-ink: #0d1220;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 var(--font-body);
+    padding-inline: 16px;
+    padding-block: 24px 48px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; display: grid; gap: 24px; }
+
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+  h1 {
+    font-family: var(--font-display); font-weight: 700; font-size: 2.25rem; line-height: 1.1;
+    margin: 0; letter-spacing: .02em; text-wrap: balance;
+  }
+  h1 span { color: var(--accent); }
+  h2 { font-family: var(--font-display); font-size: 1.35rem; margin: 0; text-wrap: balance; }
+  .sub { color: var(--muted); margin: 0; }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px; display: grid; gap: 16px;
+  }
+
+  .label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+  /* Kutucuklar */
+  .row { display: flex; gap: 6px; }
+  .tile {
+    width: 44px; height: 50px; border-radius: 8px; display: grid; place-items: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 1.5rem;
+    font-variant-numeric: tabular-nums; color: var(--tile-ink);
+    border: 2px solid transparent;
+  }
+  .tile.g { background: var(--green); }
+  .tile.y { background: var(--yellow); }
+  .tile.r { background: var(--red); }
+  .tile.empty { background: transparent; border-color: var(--line); color: var(--ink); }
+  .tile.pop { animation: pop .28s ease-out both; }
+  @keyframes pop { from { transform: scale(.6); opacity: .3; } to { transform: scale(1); opacity: 1; } }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 0; padding: 0; list-style: none; }
+  .legend li { display: flex; align-items: center; gap: 10px; }
+  .legend .tile { width: 34px; height: 38px; font-size: 1.1rem; }
+
+  /* Form */
+  .field { display: grid; gap: 6px; }
+  .field label { font-weight: 500; }
+  input[type="text"], input[type="password"] {
+    font: inherit; color: var(--ink); background: var(--bg);
+    border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
+  }
+  input.code {
+    font-family: var(--font-display); font-size: 1.6rem; letter-spacing: .4em; font-weight: 700;
+    max-width: 220px;
+  }
+  input:focus-visible { outline: none; border-color: var(--accent); }
+  .inline { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .check { display: flex; gap: 10px; align-items: center; color: var(--muted); }
+  .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+  button {
+    font: inherit; font-weight: 700; cursor: pointer; border-radius: 10px;
+    padding: 11px 18px; border: 2px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  }
+  button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
+  .error { color: var(--red); font-weight: 500; min-height: 1.5em; margin: 0; }
+
+  /* Oyun */
+  .boards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .boards { grid-template-columns: 1fr; } }
+  .board { min-width: 0; }
+  .board.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .board-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .turn-pill {
+    font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    background: var(--accent); color: var(--accent-ink); padding: 3px 10px; border-radius: 999px;
+  }
+  .count { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .history { display: grid; gap: 8px; max-height: 420px; overflow-y: auto; }
+  .hist-row { display: flex; align-items: center; gap: 10px; }
+  .hist-row .n { width: 1.8em; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .empty-note { color: var(--muted); margin: 0; }
+
+  .center { text-align: center; justify-items: center; }
+  .big-secret { display: flex; gap: 6px; justify-content: center; }
+  .reveal { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; }
+  .reveal > div { display: grid; gap: 8px; justify-items: center; }
+
+  @media (prefers-reduced-motion: reduce) { .tile.pop { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Sayı<span>.</span>Tahmin</h1>
+    <p class="sub">İki kişilik, 4 haneli gizli sayı düellosu</p>
+  </header>
+
+  <!-- KURULUM -->
+  <section id="screen-setup" class="panel">
+    <h2>Nasıl oynanır</h2>
+    <p class="sub">Her oyuncu gizlice 4 haneli bir sayı belirler. Sonra sırayla rakibin sayısını tahmin edersiniz. Her rakam renklenir:</p>
+    <ul class="legend">
+      <li><span class="tile g">5</span> Rakam doğru, yeri doğru</li>
+      <li><span class="tile y">3</span> Rakam var, yeri yanlış</li>
+      <li><span class="tile r">8</span> Rakam sayıda yok</li>
+    </ul>
+    <p class="sub">Dört kutuyu da yeşile çeviren kazanır.</p>
+    <div class="field">
+      <label for="name1">1. oyuncunun adı</label>
+      <input id="name1" type="text" maxlength="16" value="Oyuncu 1" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="name2">2. oyuncunun adı</label>
+      <input id="name2" type="text" maxlength="16" value="Oyuncu 2" autocomplete="off">
+    </div>
+    <label class="check"><input id="opt-repeat" type="checkbox"> Aynı rakam birden fazla kullanılabilsin (ör. 1123)</label>
+    <label class="check"><input id="opt-fair" type="checkbox" checked> Eşit hak: 1. oyuncu bulursa 2. oyuncuya son bir şans ver</label>
+    <div><button id="btn-start">Başla</button></div>
+  </section>
+
+  <!-- GİZLİ SAYI GİRİŞİ -->
+  <section id="screen-secret" class="panel" hidden>
+    <h2 id="secret-title">Gizli sayını belirle</h2>
+    <p class="sub" id="secret-hint">Rakibin ekrana bakmasın.</p>
+    <div class="field">
+      <label for="secret-input">4 haneli gizli sayı</label>
+      <div class="inline">
+        <input id="secret-input" class="code" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+        <button id="btn-peek" class="ghost" type="button">Göster</button>
+      </div>
+    </div>
+    <p class="error" id="secret-error"></p>
+    <div><button id="btn-secret">Kaydet ve gizle</button></div>
+  </section>
+
+  <!-- DEVRET -->
+  <section id="screen-pass" class="panel center" hidden>
+    <h2 id="pass-title">Cihazı devret</h2>
+    <p class="sub" id="pass-text"></p>
+    <button id="btn-pass">Hazırım</button>
+  </section>
+
+  <!-- OYUN -->
+  <section id="screen-game" hidden>
+    <div class="wrap">
+      <div class="panel">
+        <div class="board-head">
+          <h2 id="turn-title">Sıra</h2>
+          <span class="count" id="round-label"></span>
+        </div>
+        <form id="guess-form" class="inline" autocomplete="off">
+          <label for="guess-input" class="label" style="width:100%">Rakibin sayısını tahmin et</label>
+          <input id="guess-input" class="code" type="text" inputmode="numeric" maxlength="4" placeholder="····">
+          <button type="submit">Tahmin et</button>
+        </form>
+        <p class="error" id="guess-error"></p>
+      </div>
+      <div class="boards">
+        <div class="panel board" id="board-0"></div>
+        <div class="panel board" id="board-1"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BİTİŞ -->
+  <section id="screen-end" class="panel center" hidden>
+    <h2 id="end-title"></h2>
+    <p class="sub" id="end-text"></p>
+    <div class="reveal" id="reveal"></div>
+    <div class="inline" style="justify-content:center">
+      <button id="btn-rematch">Rövanş</button>
+      <button id="btn-new" class="ghost">Yeni oyun</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const screens = ["setup", "secret", "pass", "game", "end"];
+
+  let S = null; // oyun durumu
+
+  function freshState(names, repeat, fair) {
+    return {
+      screen: "secret",
+      names, repeat, fair,
+      secrets: ["", ""],
+      secretFor: 0,          // kurulumda kimin sayısı giriliyor
+      turn: 0,               // tahmin sırası kimde
+      guesses: [[], []],     // guesses[p] = p'nin rakibe yaptığı tahminler
+      solvedAt: [null, null],
+      result: null           // {winner: 0|1|null}
+    };
+  }
+
+  // Her rakam için renk: g = yeri doğru, y = var ama yeri yanlış, r = yok
+  function score(guess, secret) {
+    const res = Array(4).fill("r");
+    const left = {};
+    for (let i = 0; i < 4; i++) {
+      if (guess[i] === secret[i]) res[i] = "g";
+      else left[secret[i]] = (left[secret[i]] || 0) + 1;
+    }
+    for (let i = 0; i < 4; i++) {
+      if (res[i] !== "g" && left[guess[i]] > 0) { res[i] = "y"; left[guess[i]]--; }
+    }
+    return res;
+  }
+
+  function validate(v, repeat) {
+    if (!/^\d{4}$/.test(v)) return "Tam olarak 4 rakam gir.";
+    if (!repeat && new Set(v).size !== 4) return "Rakamlar birbirinden farklı olmalı.";
+    return "";
+  }
+
+  function show(name) {
+    screens.forEach((s) => { $("screen-" + s).hidden = s !== name; });
+    if (S) S.screen = name;
+  }
+
+  function tiles(digits, colors, animate) {
+    const row = document.createElement("div");
+    row.className = "row";
+    for (let i = 0; i < 4; i++) {
+      const t = document.createElement("span");
+      t.className = "tile " + (colors ? colors[i] : "empty") + (animate ? " pop" : "");
+      if (animate) t.style.animationDelay = (i * 70) + "ms";
+      t.textContent = digits[i] ?? "";
+      const word = colors ? { g: "yeri doğru", y: "var, yeri yanlış", r: "yok" }[colors[i]] : "";
+      t.setAttribute("aria-label", (digits[i] ?? "") + (word ? ", " + word : ""));
+      row.appendChild(t);
+    }
+    return row;
+  }
+
+  /* ---------- Kurulum ---------- */
+  function renderSecret() {
+    const p = S.secretFor;
+    $("secret-title").textContent = S.names[p] + ", gizli sayını belirle";
+    $("secret-hint").textContent = S.names[1 - p] + " ekrana bakmasın." +
+      (S.repeat ? " Rakamlar tekrar edebilir." : " 4 rakam da farklı olmalı.");
+    $("secret-input").value = "";
+    $("secret-input").type = "password";
+    $("btn-peek").textContent = "Göster";
+    $("secret-error").textContent = "";
+    show("secret");
+    $("secret-input").focus();
+  }
+
+  function renderPass(text, title) {
+    $("pass-title").textContent = title || "Cihazı devret";
+    $("pass-text").textContent = text;
+    show("pass");
+    $("btn-pass").focus();
+  }
+
+  $("btn-start").addEventListener("click", () => {
+    const n1 = $("name1").value.trim() || "Oyuncu 1";
+    const n2 = $("name2").value.trim() || "Oyuncu 2";
+    S = freshState([n1, n2], $("opt-repeat").checked, $("opt-fair").checked);
+    renderSecret();
+  });
+
+  $("btn-peek").addEventListener("click", () => {
+    const inp = $("secret-input");
+    const hidden = inp.type === "password";
+    inp.type = hidden ? "text" : "password";
+    $("btn-peek").textContent = hidden ? "Gizle" : "Göster";
+  });
+
+  function submitSecret() {
+    const v = $("secret-input").value.trim();
+    const err = validate(v, S.repeat);
+    if (err) { $("secret-error").textContent = err; return; }
+    S.secrets[S.secretFor] = v;
+    if (S.secretFor === 0) {
+      S.secretFor = 1;
+      S.passNext = "secret";
+      renderPass("Cihazı " + S.names[1] + " oyuncusuna ver.");
+    } else {
+      S.passNext = "game";
+      renderPass("Sayılar hazır. İlk tahmin " + S.names[0] + " oyuncusunda.", "Oyun başlıyor");
+    }
+  }
+  $("btn-secret").addEventListener("click", submitSecret);
+  $("secret-input").addEventListener("keydown", (e) => { if (e.key === "Enter") submitSecret(); });
+
+  $("btn-pass").addEventListener("click", () => {
+    if (S.passNext === "secret") renderSecret();
+    else renderGame();
+  });
+
+  /* ---------- Oyun ---------- */
+  function renderBoard(p, animateLast) {
+    const el = $("board-" + p);
+    el.innerHTML = "";
+    el.classList.toggle("active", S.turn === p && !S.result);
+    const head = document.createElement("div");
+    head.className = "board-head";
+    const h = document.createElement("h2");
+    h.textContent = S.names[p];
+    head.appendChild(h);
+    if (S.turn === p && !S.result) {
+      const pill = document.createElement("span");
+      pill.className = "turn-pill";
+      pill.textContent = "Sırada";
+      head.appendChild(pill);
+    } else {
+      const c = document.createElement("span");
+      c.className = "count";
+      c.textContent = S.guesses[p].length + " tahmin";
+      head.appendChild(c);
+    }
+    el.appendChild(head);
+
+    const lab = document.createElement("div");
+    lab.className = "label";
+    lab.textContent = S.names[1 - p] + " oyuncusunun sayısına tahminler";
+    el.appendChild(lab);
+
+    const hist = document.createElement("div");
+    hist.className = "history";
+    if (!S.guesses[p].length) {
+      const e = document.createElement("p");
+      e.className = "empty-note";
+      e.textContent = "Henüz tahmin yok.";
+      hist.appendChild(e);
+    }
+    S.guesses[p].forEach((g, i) => {
+      const row = document.createElement("div");
+      row.className = "hist-row";
+      const n = document.createElement("span");
+      n.className = "n";
+      n.textContent = (i + 1) + ".";
+      row.appendChild(n);
+      row.appendChild(tiles(g.value, g.colors, animateLast && i === S.guesses[p].length - 1));
+      hist.appendChild(row);
+    });
+    el.appendChild(hist);
+    hist.scrollTop = hist.scrollHeight;
+  }
+
+  function renderGame(animateFor) {
+    show("game");
+    const p = S.turn;
+    const last = S.solvedAt[0] !== null && p === 1;
+    $("turn-title").textContent = "Sıra: " + S.names[p] + (last ? " (son şans!)" : "");
+    $("round-label").textContent = "Tur " + (Math.min(S.guesses[0].length, S.guesses[1].length) + 1);
+    $("guess-input").value = "";
+    $("guess-error").textContent = "";
+    renderBoard(0, animateFor === 0);
+    renderBoard(1, animateFor === 1);
+    $("guess-input").focus();
+  }
+
+  $("guess-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = $("guess-input").value.trim();
+    const err = /^\d{4}$/.test(v) ? "" : "Tam olarak 4 rakam gir.";
+    if (err) { $("guess-error").textContent = err; return; }
+    const p = S.turn;
+    const colors = score(v, S.secrets[1 - p]);
+    S.guesses[p].push({ value: v, colors });
+    const solved = colors.every((c) => c === "g");
+    if (solved) S.solvedAt[p] = S.guesses[p].length;
+
+    if (p === 0) {
+      if (solved && !S.fair) return finish(0);
+      S.turn = 1;
+      renderGame(0);
+    } else {
+      if (S.solvedAt[0] !== null) return finish(solved ? null : 0);
+      if (solved) return finish(1);
+      S.turn = 0;
+      renderGame(1);
+    }
+  });
+
+  function finish(winner) {
+    S.result = { winner };
+    renderEnd();
+  }
+
+  function renderEnd() {
+    const w = S.result.winner;
+    $("end-title").textContent = w === null ? "Berabere!" : S.names[w] + " kazandı!";
+    $("end-text").textContent = w === null
+      ? "İkiniz de " + S.guesses[0].length + " tahminde buldunuz."
+      : S.names[w] + " sayıyı " + S.guesses[w].length + " tahminde buldu.";
+    const rv = $("reveal");
+    rv.innerHTML = "";
+    [0, 1].forEach((p) => {
+      const d = document.createElement("div");
+      const l = document.createElement("span");
+      l.className = "label";
+      l.textContent = S.names[p] + " oyuncusunun sayısı";
+      d.appendChild(l);
+      d.appendChild(tiles(S.secrets[p], ["g", "g", "g", "g"], true));
+      rv.appendChild(d);
+    });
+    show("end");
+  }
+
+  $("btn-rematch").addEventListener("click", () => {
+    S = freshState(S.names, S.repeat, S.fair);
+    renderSecret();
+  });
+  $("btn-new").addEventListener("click", () => { S = null; show("setup"); });
+
+  /* ---------- Yeniden yüklemede durumu koru ---------- */
+  function start(data) {
+    if (data && data.state) {
+      S = data.state;
+      if (S.screen === "secret") renderSecret();
+      else if (S.screen === "pass") renderPass($("pass-text").textContent || "Devam etmek için hazır olduğunda dokun.");
+      else if (S.screen === "game") renderGame();
+      else if (S.screen === "end" && S.result) renderEnd();
+      else show("setup");
+    } else {
+      show("setup");
+    }
+  }
+  window.claude?.hot?.snapshot?.(() => ({ state: S }));
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
