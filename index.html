@@ -44,6 +44,7 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { margin: 0; min-height: 100%; }
   body {
     background:
@@ -149,6 +150,25 @@
   .switch input:checked + .tg { background: var(--green); }
   .switch input:checked + .tg::after { transform: translateX(20px); }
   .switch input:focus-visible + .tg { outline: 3px solid var(--p2); outline-offset: 2px; }
+
+  .seg {
+    display: grid; grid-template-columns: repeat(var(--n, 2), 1fr); gap: 4px; padding: 4px;
+    background: var(--slot); border: 2px solid var(--line); border-radius: 16px;
+  }
+  .seg label { position: relative; min-width: 0; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg span {
+    display: block; text-align: center; padding: 9px 6px; border-radius: 12px; cursor: pointer;
+    font-weight: 800; color: var(--muted); transition: background .15s, color .15s;
+  }
+  .seg input:checked + span { background: var(--surface); color: var(--ink); box-shadow: 0 3px 0 var(--key-sh); }
+  .seg input:focus-visible + span { outline: 3px solid var(--p2); outline-offset: 1px; }
+  .opt { display: grid; gap: 8px; }
+  .players.solo { grid-template-columns: 1fr; }
+  .thinking span { display: inline-block; animation: blink 1.2s infinite both; }
+  .thinking span:nth-child(2) { animation-delay: .2s; }
+  .thinking span:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .2; } 40% { opacity: 1; } }
 
   .btn {
     border: 0; border-radius: 16px; padding: 14px 22px; font-family: var(--font-display); font-weight: 800; font-size: 1.25rem;
@@ -284,6 +304,7 @@
 
 <script>
 (function () {
+  document.documentElement.lang = "tr";
   const $ = (id) => document.getElementById(id);
   const view = $("view");
   const PC = ["var(--p1)", "var(--p2)"];
@@ -308,6 +329,9 @@
     names: ["Oyuncu 1", "Oyuncu 2"],
     repeat: false,
     fair: true,
+    mode: "pvp",        // pvp = iki kişi, cpu = bilgisayara karşı
+    level: "orta",
+    p2name: "Oyuncu 2",
     wins: [0, 0],
     draft: ""
   };
@@ -316,8 +340,45 @@
     Object.assign(S, {
       phase: "secret", secrets: ["", ""], secretFor: 0, turn: 0,
       guesses: [[], []], solvedAt: [null, null], winner: undefined,
-      draft: "", peek: false, busy: false, showFor: null, passTo: 1, animate: false
+      draft: "", peek: false, busy: false, showFor: null, passTo: 1, animate: false, thinking: false
     });
+    if (S.mode === "cpu") S.secrets[1] = randomFrom(pool());
+  }
+  const cpu = () => S.mode === "cpu";
+
+  /* ---------- Bilgisayar ---------- */
+  const pools = {};
+  function pool() {
+    const key = S.repeat ? "rep" : "uniq";
+    if (!pools[key]) {
+      pools[key] = [];
+      for (let i = 0; i < 10000; i++) {
+        const c = String(i).padStart(4, "0");
+        if (S.repeat || new Set(c).size === 4) pools[key].push(c);
+      }
+    }
+    return pools[key];
+  }
+  const randomFrom = (a) => a[Math.floor(Math.random() * a.length)];
+
+  // Zor: tüm ipuçlarını kullanır (~4 tahmin). Orta: son 2 tahmini hatırlar (~5).
+  // Kolay: sadece son tahmini hatırlar, arada rastgele tahmin eder (~8-9).
+  function cpuGuess() {
+    const hist = S.guesses[1];
+    const memory = { kolay: 1, orta: 2, zor: Infinity }[S.level];
+    const careless = S.level === "kolay" && Math.random() < 0.12;
+    const clues = careless ? [] : hist.slice(-memory);
+    const tried = new Set(hist.map((g) => g.value));
+    const fits = (c) => clues.every((g) => score(g.value, c).join("") === g.colors.join(""));
+    let cands = pool().filter((c) => !tried.has(c) && fits(c));
+    if (!cands.length) cands = pool().filter((c) => !tried.has(c));
+    return randomFrom(cands);
+  }
+
+  function cpuMove() {
+    if (!(S.phase === "game" && cpu() && S.turn === 1 && S.thinking)) return;
+    S.thinking = false;
+    applyGuess(1, cpuGuess());
   }
 
   // g = yeri doğru, y = var ama yeri yanlış, r = yok
@@ -384,7 +445,7 @@
     view.innerHTML = `
       <section class="card fade">
         <h1 class="hero">Sayıyı<br><span>ilk sen</span> bul.</h1>
-        <p class="lead">İkiniz de gizli bir 4 haneli sayı seçin. Sırayla tahmin edin, renkler size yol göstersin.</p>
+        <p class="lead">Gizli bir 4 haneli sayı seç. Rakibinle sırayla tahmin edin, renkler size yol göstersin.</p>
         <ul class="legend">
           <li><span class="tile sm g">7</span><span>Yeşil</span><span>yeri de doğru</span></li>
           <li><span class="tile sm y">3</span><span>Sarı</span><span>sayıda var, yeri yanlış</span></li>
@@ -392,19 +453,41 @@
         </ul>
       </section>
       <section class="card fade">
-        <div class="players">
-          <div class="pfield" style="--pc:var(--p1)"><label for="n1">1. oyuncu</label><input id="n1" maxlength="14" value="${esc(S.names[0])}" autocomplete="off"></div>
-          <div class="pfield" style="--pc:var(--p2)"><label for="n2">2. oyuncu</label><input id="n2" maxlength="14" value="${esc(S.names[1])}" autocomplete="off"></div>
+        <div class="seg" role="radiogroup" aria-label="Oyun modu">
+          <label><input type="radio" name="mode" value="pvp" ${cpu() ? "" : "checked"}><span>İki kişi</span></label>
+          <label><input type="radio" name="mode" value="cpu" ${cpu() ? "checked" : ""}><span>Bilgisayara karşı</span></label>
+        </div>
+        <div class="players ${cpu() ? "solo" : ""}" id="players">
+          <div class="pfield" style="--pc:var(--p1)"><label for="n1" id="n1-label">${cpu() ? "Adın" : "1. oyuncu"}</label><input id="n1" maxlength="14" value="${esc(S.names[0])}" autocomplete="off"></div>
+          <div class="pfield" style="--pc:var(--p2)" id="n2-field" ${cpu() ? "hidden" : ""}><label for="n2">2. oyuncu</label><input id="n2" maxlength="14" value="${esc(S.p2name)}" autocomplete="off"></div>
+        </div>
+        <div class="opt" id="level-opt" ${cpu() ? "" : "hidden"}>
+          <span class="label">Bilgisayarın zorluğu</span>
+          <div class="seg" style="--n:3" role="radiogroup" aria-label="Zorluk">
+            ${["kolay", "orta", "zor"].map((l) => `<label><input type="radio" name="level" value="${l}" ${S.level === l ? "checked" : ""}><span>${l[0].toLocaleUpperCase("tr") + l.slice(1)}</span></label>`).join("")}
+          </div>
         </div>
         <label class="switch"><span class="txt"><b>Tekrar eden rakam</b><small>Açıksa 1123 gibi sayılar seçilebilir</small></span><input type="checkbox" id="o-rep" ${S.repeat ? "checked" : ""}><span class="tg"></span></label>
-        <label class="switch"><span class="txt"><b>Eşit hak</b><small>1. oyuncu bulursa 2. oyuncuya son bir şans</small></span><input type="checkbox" id="o-fair" ${S.fair ? "checked" : ""}><span class="tg"></span></label>
+        <label class="switch"><span class="txt"><b>Eşit hak</b><small id="fair-note">${cpu() ? "Sen bulursan bilgisayara son bir şans" : "1. oyuncu bulursa 2. oyuncuya son bir şans"}</small></span><input type="checkbox" id="o-fair" ${S.fair ? "checked" : ""}><span class="tg"></span></label>
         <button class="btn wide" id="go" style="--pc:var(--p1)">Oyunu başlat</button>
       </section>`;
+    view.querySelectorAll('input[name="mode"]').forEach((r) => r.onchange = () => {
+      const c = r.value === "cpu";
+      $("players").classList.toggle("solo", c);
+      $("n2-field").hidden = c;
+      $("level-opt").hidden = !c;
+      $("n1-label").textContent = c ? "Adın" : "1. oyuncu";
+      $("fair-note").textContent = c ? "Sen bulursan bilgisayara son bir şans" : "1. oyuncu bulursa 2. oyuncuya son bir şans";
+    });
     $("go").onclick = () => {
-      const n1 = $("n1").value.trim() || "Oyuncu 1";
-      const n2 = $("n2").value.trim() || "Oyuncu 2";
-      if (n1 !== S.names[0] || n2 !== S.names[1]) S.wins = [0, 0];
+      const mode = view.querySelector('input[name="mode"]:checked').value;
+      const n1 = $("n1").value.trim() || (mode === "cpu" ? "Sen" : "Oyuncu 1");
+      S.p2name = $("n2").value.trim() || "Oyuncu 2";
+      const n2 = mode === "cpu" ? "Bilgisayar" : S.p2name;
+      if (n1 !== S.names[0] || n2 !== S.names[1] || mode !== S.mode) S.wins = [0, 0];
       S.names = [n1, n2];
+      S.mode = mode;
+      S.level = view.querySelector('input[name="level"]:checked').value;
       S.repeat = $("o-rep").checked;
       S.fair = $("o-fair").checked;
       newRound();
@@ -417,7 +500,7 @@
     view.innerHTML = `
       <section class="card fade" style="--pc:${PC[p]}">
         ${whoHTML(p, "gizli sayını seç")}
-        <p class="lead">${esc(S.names[1 - p])} ekrana bakmasın! ${S.repeat ? "" : "4 rakam da farklı olmalı."}</p>
+        <p class="lead">${cpu() ? "Bilgisayar da kendi sayısını seçecek." : esc(S.names[1 - p]) + " ekrana bakmasın!"} ${S.repeat ? "" : "4 rakam da farklı olmalı."}</p>
         ${slotsHTML(S.draft, !S.peek)}
         <button class="eye" id="eye">${EYE}<span>${S.peek ? "Gizle" : "Göster"}</span></button>
       </section>`;
@@ -448,9 +531,10 @@
 
   function statusText() {
     const p = S.turn;
+    if (S.thinking) return 'Düşünüyor<span class="thinking"><span>.</span><span>.</span><span>.</span></span>';
     if (S.busy) {
       const last = S.guesses[S.showFor].at(-1).colors;
-      if (last.every((c) => c === "g")) return "Buldun!";
+      if (last.every((c) => c === "g")) return cpu() && S.showFor === 1 ? "Buldu!" : "Buldun!";
       const c = (k) => last.filter((x) => x === k).length;
       const parts = [];
       if (c("g")) parts.push(c("g") + " yeşil");
@@ -458,7 +542,7 @@
       if (c("r")) parts.push(c("r") + " kırmızı");
       return parts.join(" · ");
     }
-    if (S.solvedAt[0] !== null && p === 1) return esc(S.names[0]) + " buldu! Bu senin son şansın.";
+    if (S.solvedAt[0] !== null && p === 1) return cpu() ? "Buldun! Bilgisayarın son şansı." : esc(S.names[0]) + " buldu! Bu senin son şansın.";
     return S.guesses[p].length ? "Tahmin " + (S.guesses[p].length + 1) : "İlk tahminini yap";
   }
 
@@ -466,13 +550,14 @@
     const p = S.busy ? S.showFor : S.turn;
     const o = 1 - p;
     const anim = S.animate; S.animate = false;
-    const hot = S.busy || (S.solvedAt[0] !== null && S.turn === 1);
+    const hot = S.busy || S.thinking || (S.solvedAt[0] !== null && S.turn === 1);
+    const sub = cpu() ? (p === 0 ? "Bilgisayarın sayısını arıyorsun" : "Senin sayını arıyor") : esc(S.names[o]) + " oyuncusunun sayısını arıyor";
     view.innerHTML = `
       <section class="card" style="--pc:${PC[p]}">
-        ${whoHTML(p, esc(S.names[o]) + " oyuncusunun sayısını arıyor")}
+        ${whoHTML(p, sub)}
         ${historyHTML(p, anim) || ""}
         <div class="status ${hot ? "hot" : ""}">${statusText()}</div>
-        ${S.busy ? "" : slotsHTML(S.draft, false)}
+        ${S.busy || S.thinking ? "" : slotsHTML(S.draft, false)}
       </section>
       ${S.guesses[o].length ? `
       <details class="other" style="--pc:${PC[o]}">
@@ -484,10 +569,12 @@
   function renderEnd() {
     const w = S.winner;
     const pc = w === null ? "var(--ink)" : PC[w];
-    const title = w === null ? "Berabere!" : esc(S.names[w]) + " kazandı!";
-    const text = w === null
+    let title = w === null ? "Berabere!" : esc(S.names[w]) + " kazandı!";
+    let text = w === null
       ? "İkiniz de " + S.guesses[0].length + " tahminde buldunuz."
       : esc(S.names[w]) + " sayıyı " + S.guesses[w].length + " tahminde buldu.";
+    if (cpu() && w === 0) { title = "Kazandın!"; text = "Bilgisayarın sayısını " + S.guesses[0].length + " tahminde buldun."; }
+    if (cpu() && w === 1) { text = "Senin sayını " + S.guesses[1].length + " tahminde buldu."; }
     const item = (p) => `<div class="item" style="--pc:${PC[p]}">
         <span class="nm"><i></i>${esc(S.names[p])}<small>${S.guesses[p].length} tahmin</small></span>
         ${tilesHTML(S.secrets[p], ["g", "g", "g", "g"], "sm win")}
@@ -520,9 +607,9 @@
   }
 
   function renderPad() {
-    const on = S.phase === "secret" || (S.phase === "game" && !S.busy);
+    const on = S.phase === "secret" || (S.phase === "game" && !S.busy && !S.thinking);
     $("pad-wrap").hidden = !(S.phase === "secret" || S.phase === "game");
-    const p = S.phase === "secret" ? S.secretFor : S.turn;
+    const p = S.phase === "secret" ? S.secretFor : (cpu() ? 0 : S.turn);
     const st = S.phase === "game" ? keyStatus(p) : {};
     const full = S.draft.length >= 4;
     $("pad").style.setProperty("--pc", PC[p]);
@@ -541,7 +628,7 @@
   }
 
   function press(k) {
-    if (!(S.phase === "secret" || (S.phase === "game" && !S.busy))) return;
+    if (!(S.phase === "secret" || (S.phase === "game" && !S.busy && !S.thinking))) return;
     if (k === "del") { S.draft = S.draft.slice(0, -1); render(); return; }
     if (k === "ok") { submit(); return; }
     if (!/^\d$/.test(k)) return;
@@ -562,15 +649,24 @@
     if (S.phase === "secret") {
       S.secrets[S.secretFor] = S.draft;
       S.draft = ""; S.peek = false;
-      S.passTo = S.secretFor === 0 ? 1 : "start";
-      S.phase = "pass";
+      if (cpu()) {
+        S.phase = "game";
+        toast("Bilgisayar da sayısını seçti. İlk tahmin senin!");
+      } else {
+        S.passTo = S.secretFor === 0 ? 1 : "start";
+        S.phase = "pass";
+      }
       render();
       return;
     }
-    const p = S.turn;
-    const colors = score(S.draft, S.secrets[1 - p]);
-    S.guesses[p].push({ value: S.draft, colors });
+    const value = S.draft;
     S.draft = "";
+    applyGuess(S.turn, value);
+  }
+
+  function applyGuess(p, value) {
+    const colors = score(value, S.secrets[1 - p]);
+    S.guesses[p].push({ value, colors });
     const solved = colors.every((c) => c === "g");
     if (solved) S.solvedAt[p] = S.guesses[p].length;
 
@@ -598,8 +694,11 @@
         S.winner = winner;
         if (winner !== null) S.wins[winner]++;
         S.phase = "end";
+      } else if (cpu() && S.turn === 1) {
+        S.thinking = true;
+        setTimeout(cpuMove, 700 + Math.random() * 600);
       } else {
-        toast("Sıra: " + S.names[S.turn] + (S.turn === 1 && S.solvedAt[0] !== null ? " (son şans!)" : ""));
+        toast(cpu() ? "Sıra sende" : "Sıra: " + S.names[S.turn] + (S.turn === 1 && S.solvedAt[0] !== null ? " (son şans!)" : ""));
       }
       render();
     }
@@ -638,6 +737,7 @@
     if (data && data.state) { S = data.state; S.animate = false; }
     render();
     if (S.busy) setTimeout(finishTurn, 600);
+    else if (S.thinking) setTimeout(cpuMove, 600);
   }
   window.claude?.hot?.snapshot?.(() => ({ state: S }));
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
