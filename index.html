@@ -261,7 +261,13 @@
   .fade { animation: fade .3s ease both; }
   @keyframes fade { from { opacity: .4; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
+  /* 5 haneli oyunda kutular biraz küçülür */
+  .len5 .tiles, .len5 .live { gap: 6px; }
+  .len5 .tile:not(.sm), .len5 .slot { width: 48px; height: 54px; font-size: 1.75rem; }
+  .len5 .tile.sm { width: 34px; height: 38px; font-size: 1.2rem; }
+  .len5 .hrow .num + .tiles { margin-right: 0; }
   @media (max-width: 380px) {
+    .len5 .tile:not(.sm), .len5 .slot { width: 44px; height: 50px; font-size: 1.6rem; }
     .tile, .slot { width: 50px; height: 54px; font-size: 1.75rem; }
     .hero { font-size: 2.6rem; }
     .key { height: 50px; }
@@ -332,6 +338,7 @@
     mode: "pvp",        // pvp = iki kişi, cpu = bilgisayara karşı
     level: "orta",
     p2name: "Oyuncu 2",
+    len: 4,             // kaç haneli sayı
     wins: [0, 0],
     draft: ""
   };
@@ -345,16 +352,18 @@
     if (S.mode === "cpu") S.secrets[1] = randomFrom(pool());
   }
   const cpu = () => S.mode === "cpu";
+  const L = () => S.len || 4;
 
   /* ---------- Bilgisayar ---------- */
   const pools = {};
   function pool() {
-    const key = S.repeat ? "rep" : "uniq";
+    const n = L();
+    const key = n + (S.repeat ? "rep" : "uniq");
     if (!pools[key]) {
       pools[key] = [];
-      for (let i = 0; i < 10000; i++) {
-        const c = String(i).padStart(4, "0");
-        if (S.repeat || new Set(c).size === 4) pools[key].push(c);
+      for (let i = 0; i < 10 ** n; i++) {
+        const c = String(i).padStart(n, "0");
+        if (S.repeat || new Set(c).size === n) pools[key].push(c);
       }
     }
     return pools[key];
@@ -383,13 +392,14 @@
 
   // g = yeri doğru, y = var ama yeri yanlış, r = yok
   function score(guess, secret) {
-    const res = Array(4).fill("r");
+    const n = guess.length;
+    const res = Array(n).fill("r");
     const left = {};
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < n; i++) {
       if (guess[i] === secret[i]) res[i] = "g";
       else left[secret[i]] = (left[secret[i]] || 0) + 1;
     }
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < n; i++) {
       if (res[i] !== "g" && left[guess[i]] > 0) { res[i] = "y"; left[guess[i]]--; }
     }
     return res;
@@ -405,7 +415,7 @@
 
   function slotsHTML(draft, mask) {
     let h = '<div class="live" id="live">';
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < L(); i++) {
       const d = draft[i];
       const cls = d !== undefined ? "full" : (i === draft.length ? "next" : "");
       const inner = d === undefined ? "" : (mask ? '<span class="dot"></span>' : d);
@@ -445,7 +455,7 @@
     view.innerHTML = `
       <section class="card fade">
         <h1 class="hero">Sayıyı<br><span>ilk sen</span> bul.</h1>
-        <p class="lead">Gizli bir 4 haneli sayı seç. Rakibinle sırayla tahmin edin, renkler size yol göstersin.</p>
+        <p class="lead">Gizli bir sayı seç. Rakibinle sırayla tahmin edin, renkler size yol göstersin.</p>
         <ul class="legend">
           <li><span class="tile sm g">7</span><span>Yeşil</span><span>yeri de doğru</span></li>
           <li><span class="tile sm y">3</span><span>Sarı</span><span>sayıda var, yeri yanlış</span></li>
@@ -465,6 +475,12 @@
           <span class="label">Bilgisayarın zorluğu</span>
           <div class="seg" style="--n:3" role="radiogroup" aria-label="Zorluk">
             ${["kolay", "orta", "zor"].map((l) => `<label><input type="radio" name="level" value="${l}" ${S.level === l ? "checked" : ""}><span>${l[0].toLocaleUpperCase("tr") + l.slice(1)}</span></label>`).join("")}
+          </div>
+        </div>
+        <div class="opt">
+          <span class="label">Kaç haneli sayı?</span>
+          <div class="seg" role="radiogroup" aria-label="Hane sayısı">
+            ${[4, 5].map((n) => `<label><input type="radio" name="len" value="${n}" ${L() === n ? "checked" : ""}><span>${n} rakam</span></label>`).join("")}
           </div>
         </div>
         <label class="switch"><span class="txt"><b>Tekrar eden rakam</b><small>Açıksa 1123 gibi sayılar seçilebilir</small></span><input type="checkbox" id="o-rep" ${S.repeat ? "checked" : ""}><span class="tg"></span></label>
@@ -488,6 +504,9 @@
       S.names = [n1, n2];
       S.mode = mode;
       S.level = view.querySelector('input[name="level"]:checked').value;
+      const len = Number(view.querySelector('input[name="len"]:checked').value);
+      if (len !== L()) S.wins = [0, 0];
+      S.len = len;
       S.repeat = $("o-rep").checked;
       S.fair = $("o-fair").checked;
       newRound();
@@ -500,7 +519,7 @@
     view.innerHTML = `
       <section class="card fade" style="--pc:${PC[p]}">
         ${whoHTML(p, "gizli sayını seç")}
-        <p class="lead">${cpu() ? "Bilgisayar da kendi sayısını seçecek." : esc(S.names[1 - p]) + " ekrana bakmasın!"} ${S.repeat ? "" : "4 rakam da farklı olmalı."}</p>
+        <p class="lead">${cpu() ? "Bilgisayar da kendi sayısını seçecek." : esc(S.names[1 - p]) + " ekrana bakmasın!"} ${S.repeat ? "" : L() + " rakam da farklı olmalı."}</p>
         ${slotsHTML(S.draft, !S.peek)}
         <button class="eye" id="eye">${EYE}<span>${S.peek ? "Gizle" : "Göster"}</span></button>
       </section>`;
@@ -577,7 +596,7 @@
     if (cpu() && w === 1) { text = "Senin sayını " + S.guesses[1].length + " tahminde buldu."; }
     const item = (p) => `<div class="item" style="--pc:${PC[p]}">
         <span class="nm"><i></i>${esc(S.names[p])}<small>${S.guesses[p].length} tahmin</small></span>
-        ${tilesHTML(S.secrets[p], ["g", "g", "g", "g"], "sm win")}
+        ${tilesHTML(S.secrets[p], Array(L()).fill("g"), "sm win")}
       </div>`;
     view.innerHTML = `
       <section class="card end fade" style="--pc:${pc}">
@@ -611,7 +630,7 @@
     $("pad-wrap").hidden = !(S.phase === "secret" || S.phase === "game");
     const p = S.phase === "secret" ? S.secretFor : (cpu() ? 0 : S.turn);
     const st = S.phase === "game" ? keyStatus(p) : {};
-    const full = S.draft.length >= 4;
+    const full = S.draft.length >= L();
     $("pad").style.setProperty("--pc", PC[p]);
     $("pad").querySelectorAll(".key").forEach((k) => {
       const v = k.dataset.k;
@@ -632,7 +651,7 @@
     if (k === "del") { S.draft = S.draft.slice(0, -1); render(); return; }
     if (k === "ok") { submit(); return; }
     if (!/^\d$/.test(k)) return;
-    if (S.draft.length >= 4) return;
+    if (S.draft.length >= L()) return;
     if (!S.repeat && S.draft.includes(k)) { shake(); return; }
     S.draft += k;
     render();
@@ -645,7 +664,7 @@
   }
 
   function submit() {
-    if (S.draft.length !== 4) { shake(); return; }
+    if (S.draft.length !== L()) { shake(); return; }
     if (S.phase === "secret") {
       S.secrets[S.secretFor] = S.draft;
       S.draft = ""; S.peek = false;
@@ -725,6 +744,7 @@
   });
 
   function render() {
+    document.body.classList.toggle("len5", L() === 5 && S.phase !== "setup");
     renderScore();
     ({ setup: renderSetup, secret: renderSecret, pass: renderPass, game: renderGame, end: renderEnd })[S.phase]();
     renderPad();
