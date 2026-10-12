@@ -1,0 +1,765 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sayı Tahmin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800&display=swap">
+<style>
+  /* Layout: telefon gibi tek sütunlu oyun masası; altta yapışkan tuş takımı, üstte skor. */
+  :root {
+    --bg: #e9eefa;
+    --surface: #ffffff;
+    --ink: #1b2340;
+    --muted: #66708f;
+    --line: #d6dcee;
+    --slot: #f4f6fd;
+    --key: #ffffff;
+    --key-sh: #c3cce4;
+    --p1: #ff6a3d;
+    --p2: #2f86ff;
+    --green: #22a95b;  --green-sh: #157a40;
+    --yellow: #f2b705; --yellow-sh: #b98a00;
+    --red: #e5484d;    --red-sh: #a92d32;
+    --tile-ink: #ffffff;
+    --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1430; --surface: #182044; --ink: #eef1ff; --muted: #9aa3c7; --line: #2a3566;
+      --slot: #121a3a; --key: #26305c; --key-sh: #080c22;
+      --p1: #ff8257; --p2: #5b9dff;
+      --green: #27b865; --green-sh: #146b39; --yellow: #f5be1b; --yellow-sh: #9c7400;
+      --red: #ec5459; --red-sh: #8f2428;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1430; --surface: #182044; --ink: #eef1ff; --muted: #9aa3c7; --line: #2a3566;
+    --slot: #121a3a; --key: #26305c; --key-sh: #080c22;
+    --p1: #ff8257; --p2: #5b9dff;
+    --green: #27b865; --green-sh: #146b39; --yellow: #f5be1b; --yellow-sh: #9c7400;
+    --red: #ec5459; --red-sh: #8f2428;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background:
+      radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--muted) 18%, transparent) 1px, transparent 0) 0 0 / 22px 22px,
+      var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 var(--font-body);
+    padding-inline: 16px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--p2); outline-offset: 2px; }
+
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; gap: 16px; padding-block: 16px 0; }
+
+  /* Üst çubuk */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
+  .brand { font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; }
+  .brand .mini { display: flex; gap: 3px; }
+  .brand .mini i { width: 10px; height: 14px; border-radius: 3px; display: block; }
+  .score { display: flex; align-items: center; gap: 6px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; border-radius: 999px;
+    background: var(--surface); border: 2px solid var(--line); max-width: 140px; font-size: .9rem;
+  }
+  .chip b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+  .chip .av { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--pc); color: #fff; display: grid; place-items: center; font-size: .7rem; font-weight: 800; }
+  .chip.on { border-color: var(--pc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 25%, transparent); }
+  .score .n { font-family: var(--font-display); font-size: 1.1rem; white-space: nowrap; }
+  .brand { white-space: nowrap; }
+  @media (max-width: 460px) {
+    .chip { padding: 3px; }
+    .chip b { display: none; }
+    .chip .av { width: 26px; height: 26px; font-size: .8rem; }
+  }
+
+  main { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: var(--surface); border-radius: 22px; padding: 22px 20px;
+    box-shadow: 0 6px 0 var(--key-sh), 0 18px 40px -24px rgba(20, 30, 70, .35);
+    display: grid; gap: 18px;
+  }
+
+  h1, h2 { font-family: var(--font-display); margin: 0; line-height: 1.05; text-wrap: balance; }
+  .hero { font-size: 3.1rem; font-weight: 800; letter-spacing: -.01em; }
+  .hero span { color: var(--p1); }
+  h2 { font-size: 1.7rem; font-weight: 800; }
+  .lead { margin: 0; color: var(--muted); font-size: 1.05rem; }
+  .label { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+
+  /* Kutucuklar */
+  .tiles { display: flex; gap: 8px; }
+  .tile {
+    width: 56px; height: 60px; border-radius: 14px; display: grid; place-items: center;
+    font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1;
+    font-variant-numeric: tabular-nums; color: var(--tile-ink);
+  }
+  .tile.g { background: var(--green);  box-shadow: inset 0 -5px 0 var(--green-sh); }
+  .tile.y { background: var(--yellow); box-shadow: inset 0 -5px 0 var(--yellow-sh); }
+  .tile.r { background: var(--red);    box-shadow: inset 0 -5px 0 var(--red-sh); }
+  .tile.sm { width: 38px; height: 42px; font-size: 1.35rem; border-radius: 10px; }
+  .tile.flip { animation: flip .5s cubic-bezier(.3,1.4,.5,1) both; }
+  @keyframes flip { 0% { transform: rotateX(90deg) scale(.9); } 100% { transform: none; } }
+  .tile.win { animation: bounce .6s ease both; }
+  @keyframes bounce { 0%,100% { transform: none; } 40% { transform: translateY(-14px); } 70% { transform: translateY(2px); } }
+
+  .slot {
+    width: 56px; height: 60px; border-radius: 14px; display: grid; place-items: center;
+    background: var(--slot); border: 3px solid var(--line);
+    font-family: var(--font-display); font-weight: 800; font-size: 2rem; color: var(--ink);
+    transition: border-color .15s, transform .15s;
+  }
+  .slot.full { border-color: var(--pc); transform: scale(1.04); }
+  .slot.next { border-color: color-mix(in srgb, var(--pc) 55%, var(--line)); border-style: dashed; }
+  .slot .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--ink); }
+  .live { display: flex; gap: 8px; justify-content: center; }
+  .live.shake { animation: shake .35s; }
+  @keyframes shake { 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+
+  .legend { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .legend li { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+  .legend li span:last-child { font-weight: 500; color: var(--muted); }
+  .legend .tile { flex: none; }
+
+  /* Kurulum */
+  .players { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pfield { display: grid; gap: 6px; min-width: 0; }
+  .pfield label { font-size: .8rem; font-weight: 800; color: var(--pc); text-transform: uppercase; letter-spacing: .08em; }
+  .pfield input {
+    font: 700 1.05rem var(--font-body); color: var(--ink); width: 100%; min-width: 0;
+    background: var(--slot); border: 3px solid var(--line); border-radius: 14px; padding: 10px 12px;
+  }
+  .pfield input:focus { border-color: var(--pc); outline: none; }
+
+  .switch { display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: pointer; }
+  .switch .txt { display: grid; }
+  .switch .txt b { font-weight: 800; }
+  .switch .txt small { color: var(--muted); font-size: .88rem; }
+  .switch input { position: absolute; opacity: 0; pointer-events: none; }
+  .switch .tg { flex: none; width: 50px; height: 30px; border-radius: 999px; background: var(--line); position: relative; transition: background .2s; }
+  .switch .tg::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.25); transition: transform .2s; }
+  .switch input:checked + .tg { background: var(--green); }
+  .switch input:checked + .tg::after { transform: translateX(20px); }
+  .switch input:focus-visible + .tg { outline: 3px solid var(--p2); outline-offset: 2px; }
+
+  .seg {
+    display: grid; grid-template-columns: repeat(var(--n, 2), 1fr); gap: 4px; padding: 4px;
+    background: var(--slot); border: 2px solid var(--line); border-radius: 16px;
+  }
+  .seg label { position: relative; min-width: 0; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg span {
+    display: block; text-align: center; padding: 9px 6px; border-radius: 12px; cursor: pointer;
+    font-weight: 800; color: var(--muted); transition: background .15s, color .15s;
+  }
+  .seg input:checked + span { background: var(--surface); color: var(--ink); box-shadow: 0 3px 0 var(--key-sh); }
+  .seg input:focus-visible + span { outline: 3px solid var(--p2); outline-offset: 1px; }
+  .opt { display: grid; gap: 8px; }
+  .players.solo { grid-template-columns: 1fr; }
+  .thinking span { display: inline-block; animation: blink 1.2s infinite both; }
+  .thinking span:nth-child(2) { animation-delay: .2s; }
+  .thinking span:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .2; } 40% { opacity: 1; } }
+
+  .btn {
+    border: 0; border-radius: 16px; padding: 14px 22px; font-family: var(--font-display); font-weight: 800; font-size: 1.25rem;
+    background: var(--pc, var(--p1)); color: #fff; box-shadow: inset 0 -5px 0 rgba(0,0,0,.22);
+    transition: transform .08s;
+  }
+  .btn:active { transform: translateY(2px); box-shadow: inset 0 -2px 0 rgba(0,0,0,.22); }
+  .btn.wide { width: 100%; }
+  .btn.soft { background: var(--slot); color: var(--ink); box-shadow: inset 0 -4px 0 var(--line); }
+
+  /* Oyuncu başlığı */
+  .who { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    flex: none; width: 48px; height: 48px; border-radius: 16px; background: var(--pc); color: #fff;
+    display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,.2);
+  }
+  .who .t { display: grid; min-width: 0; }
+  .who .t h2 { font-size: 1.5rem; overflow-wrap: anywhere; }
+  .who .t span { color: var(--muted); font-weight: 700; }
+
+  .eye { justify-self: center; background: none; border: 0; color: var(--muted); font-weight: 800; display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 10px; }
+  .eye svg { width: 20px; height: 20px; }
+
+  /* Devret ekranı */
+  .pass { text-align: center; justify-items: center; padding-block: 36px; background: var(--pc); color: #fff; box-shadow: 0 6px 0 color-mix(in srgb, var(--pc) 60%, #000), 0 18px 40px -20px var(--pc); }
+  .pass .phone { width: 72px; height: 72px; }
+  .pass h2 { font-size: 2rem; }
+  .pass p { margin: 0; font-weight: 700; opacity: .92; }
+  .pass .btn { background: #fff; color: var(--pc); }
+
+  /* Oyun */
+  .status { min-height: 1.6em; text-align: center; font-weight: 800; font-size: 1.05rem; color: var(--muted); }
+  .status.hot { color: var(--pc); }
+  .history { display: grid; gap: 8px; justify-items: center; }
+  .hrow { display: flex; align-items: center; gap: 8px; }
+  .hrow .num { width: 22px; text-align: right; color: var(--muted); font-weight: 800; font-variant-numeric: tabular-nums; font-size: .85rem; }
+  .hrow .num + .tiles { margin-right: 30px; }
+  .empty { color: var(--muted); text-align: center; margin: 0; font-weight: 600; }
+
+  details.other { background: var(--surface); border-radius: 18px; padding: 12px 16px; border: 2px solid var(--line); }
+  details.other summary { cursor: pointer; font-weight: 800; color: var(--muted); list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+  details.other summary::-webkit-details-marker { display: none; }
+  details.other summary::after { content: "Göster"; color: var(--pc); }
+  details.other[open] summary::after { content: "Gizle"; }
+  details.other .history { margin-top: 12px; }
+
+  /* Tuş takımı */
+  .pad-wrap {
+    position: sticky; bottom: 0; margin-inline: -16px; padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, var(--bg) 75%, transparent);
+  }
+  .pad { max-width: 480px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .key {
+    height: 54px; border: 0; border-radius: 14px; background: var(--key); color: var(--ink);
+    font-family: var(--font-display); font-weight: 800; font-size: 1.6rem;
+    box-shadow: inset 0 -4px 0 var(--key-sh), 0 1px 0 var(--key-sh);
+    transition: transform .06s, opacity .15s;
+    display: grid; place-items: center;
+  }
+  .key:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -2px 0 var(--key-sh); }
+  .key:disabled { opacity: .3; cursor: default; }
+  .key.g { background: var(--green);  color: #fff; box-shadow: inset 0 -4px 0 var(--green-sh); }
+  .key.y { background: var(--yellow); color: #fff; box-shadow: inset 0 -4px 0 var(--yellow-sh); }
+  .key.r { background: var(--red);    color: #fff; box-shadow: inset 0 -4px 0 var(--red-sh); opacity: .55; }
+  .key.del svg { width: 26px; height: 26px; }
+  .key.ok { grid-column: span 3; background: var(--pc); color: #fff; font-size: 1.3rem; box-shadow: inset 0 -5px 0 rgba(0,0,0,.25); }
+  .key.del { grid-column: span 2; }
+  .pad-hint { text-align: center; color: var(--muted); font-size: .8rem; font-weight: 600; margin: 8px 0 0; }
+  @media (hover: none) { .pad-hint { display: none; } }
+
+  /* Bitiş */
+  .end { text-align: center; justify-items: center; }
+  .trophy { width: 84px; height: 84px; }
+  .end h2 { font-size: 2.3rem; color: var(--pc); }
+  .reveal { display: grid; gap: 14px; width: 100%; }
+  .reveal .item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; background: var(--slot); border-radius: 16px; flex-wrap: wrap; }
+  .reveal .item .nm { display: flex; align-items: center; gap: 8px; font-weight: 800; min-width: 0; }
+  .reveal .item .nm i { width: 12px; height: 12px; border-radius: 50%; background: var(--pc); flex: none; }
+  .reveal .item small { color: var(--muted); font-weight: 700; }
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+
+  .toast {
+    position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top, 0px)); transform: translate(-50%, -150%);
+    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 800;
+    transition: transform .3s cubic-bezier(.3,1.4,.5,1); z-index: 10; white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis;
+  }
+  .toast.show { transform: translate(-50%, 0); }
+
+  .fade { animation: fade .3s ease both; }
+  @keyframes fade { from { opacity: .4; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* 5 haneli oyunda kutular biraz küçülür */
+  .len5 .tiles, .len5 .live { gap: 6px; }
+  .len5 .tile:not(.sm), .len5 .slot { width: 48px; height: 54px; font-size: 1.75rem; }
+  .len5 .tile.sm { width: 34px; height: 38px; font-size: 1.2rem; }
+  .len5 .hrow .num + .tiles { margin-right: 0; }
+  @media (max-width: 380px) {
+    .len5 .tile:not(.sm), .len5 .slot { width: 44px; height: 50px; font-size: 1.6rem; }
+    .tile, .slot { width: 50px; height: 54px; font-size: 1.75rem; }
+    .hero { font-size: 2.6rem; }
+    .key { height: 50px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="app">
+  <div class="top">
+    <div class="brand">
+      <span class="mini"><i style="background:var(--green)"></i><i style="background:var(--yellow)"></i><i style="background:var(--red)"></i></span>
+      Sayı Tahmin
+    </div>
+    <div class="score" id="score"></div>
+  </div>
+  <main id="view"></main>
+  <div class="pad-wrap" id="pad-wrap" hidden>
+    <div class="pad" id="pad">
+      <button class="key" data-k="1">1</button>
+      <button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button>
+      <button class="key" data-k="4">4</button>
+      <button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button>
+      <button class="key" data-k="7">7</button>
+      <button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button>
+      <button class="key" data-k="0">0</button>
+      <button class="key del" data-k="del" aria-label="Sil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M12 9l6 6M18 9l-6 6"/></svg>
+      </button>
+      <button class="key ok" data-k="ok" id="ok-key">Tahmin et</button>
+    </div>
+    <p class="pad-hint">Klavyeyle de oynayabilirsin: rakamlar, Backspace, Enter</p>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  document.documentElement.lang = "tr";
+  const $ = (id) => document.getElementById(id);
+  const view = $("view");
+  const PC = ["var(--p1)", "var(--p2)"];
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const initial = (n) => esc((n.trim()[0] || "?").toLocaleUpperCase("tr"));
+
+  // Türkçe yönelme eki: Ali'ye, Ayşe'ye, Mert'e
+  function dative(name) {
+    const num = { 0: "a", 1: "e", 2: "ye", 3: "e", 4: "e", 5: "e", 6: "ya", 7: "ye", 8: "e", 9: "a" };
+    if (/\d$/.test(name)) return name + "'" + num[name.slice(-1)];
+    const vowels = "aeıioöuüAEIİOÖUÜ";
+    const back = "aıouAIOU";
+    let last = "";
+    for (const ch of name) if (vowels.includes(ch)) last = ch;
+    const endsVowel = vowels.includes(name.slice(-1));
+    const suf = back.includes(last) ? "a" : "e";
+    return name + "'" + (endsVowel ? "y" : "") + suf;
+  }
+
+  let S = {
+    phase: "setup",
+    names: ["Oyuncu 1", "Oyuncu 2"],
+    repeat: false,
+    fair: true,
+    mode: "pvp",        // pvp = iki kişi, cpu = bilgisayara karşı
+    level: "orta",
+    p2name: "Oyuncu 2",
+    len: 4,             // kaç haneli sayı
+    wins: [0, 0],
+    draft: ""
+  };
+
+  function newRound() {
+    Object.assign(S, {
+      phase: "secret", secrets: ["", ""], secretFor: 0, turn: 0,
+      guesses: [[], []], solvedAt: [null, null], winner: undefined,
+      draft: "", peek: false, busy: false, showFor: null, passTo: 1, animate: false, thinking: false
+    });
+    if (S.mode === "cpu") S.secrets[1] = randomFrom(pool());
+  }
+  const cpu = () => S.mode === "cpu";
+  const L = () => S.len || 4;
+
+  /* ---------- Bilgisayar ---------- */
+  const pools = {};
+  function pool() {
+    const n = L();
+    const key = n + (S.repeat ? "rep" : "uniq");
+    if (!pools[key]) {
+      pools[key] = [];
+      for (let i = 0; i < 10 ** n; i++) {
+        const c = String(i).padStart(n, "0");
+        if (S.repeat || new Set(c).size === n) pools[key].push(c);
+      }
+    }
+    return pools[key];
+  }
+  const randomFrom = (a) => a[Math.floor(Math.random() * a.length)];
+
+  // Zor: tüm ipuçlarını kullanır (~4 tahmin). Orta: son 2 tahmini hatırlar (~5).
+  // Kolay: sadece son tahmini hatırlar, arada rastgele tahmin eder (~8-9).
+  function cpuGuess() {
+    const hist = S.guesses[1];
+    const memory = { kolay: 1, orta: 2, zor: Infinity }[S.level];
+    const careless = S.level === "kolay" && Math.random() < 0.12;
+    const clues = careless ? [] : hist.slice(-memory);
+    const tried = new Set(hist.map((g) => g.value));
+    const fits = (c) => clues.every((g) => score(g.value, c).join("") === g.colors.join(""));
+    let cands = pool().filter((c) => !tried.has(c) && fits(c));
+    if (!cands.length) cands = pool().filter((c) => !tried.has(c));
+    return randomFrom(cands);
+  }
+
+  function cpuMove() {
+    if (!(S.phase === "game" && cpu() && S.turn === 1 && S.thinking)) return;
+    S.thinking = false;
+    applyGuess(1, cpuGuess());
+  }
+
+  // g = yeri doğru, y = var ama yeri yanlış, r = yok
+  function score(guess, secret) {
+    const n = guess.length;
+    const res = Array(n).fill("r");
+    const left = {};
+    for (let i = 0; i < n; i++) {
+      if (guess[i] === secret[i]) res[i] = "g";
+      else left[secret[i]] = (left[secret[i]] || 0) + 1;
+    }
+    for (let i = 0; i < n; i++) {
+      if (res[i] !== "g" && left[guess[i]] > 0) { res[i] = "y"; left[guess[i]]--; }
+    }
+    return res;
+  }
+
+  /* ---------- Parçalar ---------- */
+  const WORD = { g: "yeri doğru", y: "var, yeri yanlış", r: "yok" };
+  function tilesHTML(value, colors, cls) {
+    return '<div class="tiles">' + [...value].map((d, i) =>
+      `<span class="tile ${colors[i]} ${cls || ""}" style="animation-delay:${i * 110}ms" aria-label="${d}, ${WORD[colors[i]]}">${d}</span>`
+    ).join("") + "</div>";
+  }
+
+  function slotsHTML(draft, mask) {
+    let h = '<div class="live" id="live">';
+    for (let i = 0; i < L(); i++) {
+      const d = draft[i];
+      const cls = d !== undefined ? "full" : (i === draft.length ? "next" : "");
+      const inner = d === undefined ? "" : (mask ? '<span class="dot"></span>' : d);
+      h += `<span class="slot ${cls}">${inner}</span>`;
+    }
+    return h + "</div>";
+  }
+
+  function whoHTML(p, sub) {
+    return `<div class="who"><div class="avatar">${initial(S.names[p])}</div>
+      <div class="t"><h2>${esc(S.names[p])}</h2><span>${sub}</span></div></div>`;
+  }
+
+  function historyHTML(p, animateLast, small) {
+    const g = S.guesses[p];
+    if (!g.length) return "";
+    return '<div class="history">' + g.map((x, i) => {
+      const anim = animateLast && i === g.length - 1;
+      return `<div class="hrow"><span class="num">${i + 1}</span>${tilesHTML(x.value, x.colors, (small ? "sm " : "") + (anim ? "flip" : ""))}</div>`;
+    }).join("") + "</div>";
+  }
+
+  const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const PHONE = '<svg class="phone" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="6" width="28" height="52" rx="6"/><path d="M28 50h8"/><path d="M4 30l8-6v4h0M12 34v4l-8-6" opacity=".7"/><path d="M60 30l-8-6M60 30l-8 6" opacity=".7"/></svg>';
+  const TROPHY = '<svg class="trophy" viewBox="0 0 64 64"><path d="M18 8h28v14a14 14 0 0 1-28 0z" fill="var(--yellow)"/><path d="M18 12H8v4a10 10 0 0 0 10 10M46 12h10v4a10 10 0 0 1-10 10" fill="none" stroke="var(--yellow)" stroke-width="4"/><rect x="28" y="36" width="8" height="10" fill="var(--yellow-sh)"/><rect x="20" y="46" width="24" height="8" rx="3" fill="var(--yellow)"/></svg>';
+
+  /* ---------- Ekranlar ---------- */
+  function renderScore() {
+    const el = $("score");
+    if (S.phase === "setup") { el.innerHTML = ""; return; }
+    const active = S.phase === "game" ? (S.busy ? S.showFor : S.turn) : -1;
+    const chip = (p) => `<span class="chip ${active === p ? "on" : ""}" style="--pc:${PC[p]}"><span class="av">${initial(S.names[p])}</span><b>${esc(S.names[p])}</b></span>`;
+    el.innerHTML = `${chip(0)}<span class="n">${S.wins[0]}–${S.wins[1]}</span>${chip(1)}`;
+  }
+
+  function renderSetup() {
+    view.innerHTML = `
+      <section class="card fade">
+        <h1 class="hero">Sayıyı<br><span>ilk sen</span> bul.</h1>
+        <p class="lead">Gizli bir sayı seç. Rakibinle sırayla tahmin edin, renkler size yol göstersin.</p>
+        <ul class="legend">
+          <li><span class="tile sm g">7</span><span>Yeşil</span><span>yeri de doğru</span></li>
+          <li><span class="tile sm y">3</span><span>Sarı</span><span>sayıda var, yeri yanlış</span></li>
+          <li><span class="tile sm r">8</span><span>Kırmızı</span><span>sayıda yok</span></li>
+        </ul>
+      </section>
+      <section class="card fade">
+        <div class="seg" role="radiogroup" aria-label="Oyun modu">
+          <label><input type="radio" name="mode" value="pvp" ${cpu() ? "" : "checked"}><span>İki kişi</span></label>
+          <label><input type="radio" name="mode" value="cpu" ${cpu() ? "checked" : ""}><span>Bilgisayara karşı</span></label>
+        </div>
+        <div class="players ${cpu() ? "solo" : ""}" id="players">
+          <div class="pfield" style="--pc:var(--p1)"><label for="n1" id="n1-label">${cpu() ? "Adın" : "1. oyuncu"}</label><input id="n1" maxlength="14" value="${esc(S.names[0])}" autocomplete="off"></div>
+          <div class="pfield" style="--pc:var(--p2)" id="n2-field" ${cpu() ? "hidden" : ""}><label for="n2">2. oyuncu</label><input id="n2" maxlength="14" value="${esc(S.p2name)}" autocomplete="off"></div>
+        </div>
+        <div class="opt" id="level-opt" ${cpu() ? "" : "hidden"}>
+          <span class="label">Bilgisayarın zorluğu</span>
+          <div class="seg" style="--n:3" role="radiogroup" aria-label="Zorluk">
+            ${["kolay", "orta", "zor"].map((l) => `<label><input type="radio" name="level" value="${l}" ${S.level === l ? "checked" : ""}><span>${l[0].toLocaleUpperCase("tr") + l.slice(1)}</span></label>`).join("")}
+          </div>
+        </div>
+        <div class="opt">
+          <span class="label">Kaç haneli sayı?</span>
+          <div class="seg" role="radiogroup" aria-label="Hane sayısı">
+            ${[4, 5].map((n) => `<label><input type="radio" name="len" value="${n}" ${L() === n ? "checked" : ""}><span>${n} rakam</span></label>`).join("")}
+          </div>
+        </div>
+        <label class="switch"><span class="txt"><b>Tekrar eden rakam</b><small>Açıksa 1123 gibi sayılar seçilebilir</small></span><input type="checkbox" id="o-rep" ${S.repeat ? "checked" : ""}><span class="tg"></span></label>
+        <label class="switch"><span class="txt"><b>Eşit hak</b><small id="fair-note">${cpu() ? "Sen bulursan bilgisayara son bir şans" : "1. oyuncu bulursa 2. oyuncuya son bir şans"}</small></span><input type="checkbox" id="o-fair" ${S.fair ? "checked" : ""}><span class="tg"></span></label>
+        <button class="btn wide" id="go" style="--pc:var(--p1)">Oyunu başlat</button>
+      </section>`;
+    view.querySelectorAll('input[name="mode"]').forEach((r) => r.onchange = () => {
+      const c = r.value === "cpu";
+      $("players").classList.toggle("solo", c);
+      $("n2-field").hidden = c;
+      $("level-opt").hidden = !c;
+      $("n1-label").textContent = c ? "Adın" : "1. oyuncu";
+      $("fair-note").textContent = c ? "Sen bulursan bilgisayara son bir şans" : "1. oyuncu bulursa 2. oyuncuya son bir şans";
+    });
+    $("go").onclick = () => {
+      const mode = view.querySelector('input[name="mode"]:checked').value;
+      const n1 = $("n1").value.trim() || (mode === "cpu" ? "Sen" : "Oyuncu 1");
+      S.p2name = $("n2").value.trim() || "Oyuncu 2";
+      const n2 = mode === "cpu" ? "Bilgisayar" : S.p2name;
+      if (n1 !== S.names[0] || n2 !== S.names[1] || mode !== S.mode) S.wins = [0, 0];
+      S.names = [n1, n2];
+      S.mode = mode;
+      S.level = view.querySelector('input[name="level"]:checked').value;
+      const len = Number(view.querySelector('input[name="len"]:checked').value);
+      if (len !== L()) S.wins = [0, 0];
+      S.len = len;
+      S.repeat = $("o-rep").checked;
+      S.fair = $("o-fair").checked;
+      newRound();
+      render();
+    };
+  }
+
+  function renderSecret() {
+    const p = S.secretFor;
+    view.innerHTML = `
+      <section class="card fade" style="--pc:${PC[p]}">
+        ${whoHTML(p, "gizli sayını seç")}
+        <p class="lead">${cpu() ? "Bilgisayar da kendi sayısını seçecek." : esc(S.names[1 - p]) + " ekrana bakmasın!"} ${S.repeat ? "" : L() + " rakam da farklı olmalı."}</p>
+        ${slotsHTML(S.draft, !S.peek)}
+        <button class="eye" id="eye">${EYE}<span>${S.peek ? "Gizle" : "Göster"}</span></button>
+      </section>`;
+    $("eye").onclick = () => { S.peek = !S.peek; render(); };
+  }
+
+  function renderPass() {
+    const p = S.passTo;
+    const start = S.passTo === "start";
+    const who = start ? 0 : p;
+    const title = start ? "Sayılar hazır!" : "Cihazı " + esc(dative(S.names[p])) + " ver";
+    const text = start ? esc(S.names[0]) + " ilk tahmini yapacak." : esc(S.names[0]) + " sayısını kaydetti. Şimdi sıra sende.";
+    view.innerHTML = `
+      <section class="card pass fade" style="--pc:${PC[who]}">
+        ${PHONE}
+        <h2>${title}</h2>
+        <p>${text}</p>
+        <button class="btn" id="ready">${start ? "Oyuna başla" : "Hazırım"}</button>
+      </section>`;
+    $("ready").onclick = () => {
+      if (start) { S.phase = "game"; }
+      else { S.phase = "secret"; S.secretFor = 1; }
+      S.draft = ""; S.peek = false;
+      render();
+    };
+    $("ready").focus();
+  }
+
+  function statusText() {
+    const p = S.turn;
+    if (S.thinking) return 'Düşünüyor<span class="thinking"><span>.</span><span>.</span><span>.</span></span>';
+    if (S.busy) {
+      const last = S.guesses[S.showFor].at(-1).colors;
+      if (last.every((c) => c === "g")) return cpu() && S.showFor === 1 ? "Buldu!" : "Buldun!";
+      const c = (k) => last.filter((x) => x === k).length;
+      const parts = [];
+      if (c("g")) parts.push(c("g") + " yeşil");
+      if (c("y")) parts.push(c("y") + " sarı");
+      if (c("r")) parts.push(c("r") + " kırmızı");
+      return parts.join(" · ");
+    }
+    if (S.solvedAt[0] !== null && p === 1) return cpu() ? "Buldun! Bilgisayarın son şansı." : esc(S.names[0]) + " buldu! Bu senin son şansın.";
+    return S.guesses[p].length ? "Tahmin " + (S.guesses[p].length + 1) : "İlk tahminini yap";
+  }
+
+  function renderGame() {
+    const p = S.busy ? S.showFor : S.turn;
+    const o = 1 - p;
+    const anim = S.animate; S.animate = false;
+    const hot = S.busy || S.thinking || (S.solvedAt[0] !== null && S.turn === 1);
+    const sub = cpu() ? (p === 0 ? "Bilgisayarın sayısını arıyorsun" : "Senin sayını arıyor") : esc(S.names[o]) + " oyuncusunun sayısını arıyor";
+    view.innerHTML = `
+      <section class="card" style="--pc:${PC[p]}">
+        ${whoHTML(p, sub)}
+        ${historyHTML(p, anim) || ""}
+        <div class="status ${hot ? "hot" : ""}">${statusText()}</div>
+        ${S.busy || S.thinking ? "" : slotsHTML(S.draft, false)}
+      </section>
+      ${S.guesses[o].length ? `
+      <details class="other" style="--pc:${PC[o]}">
+        <summary>${esc(S.names[o])} · ${S.guesses[o].length} tahmin</summary>
+        ${historyHTML(o, false, true)}
+      </details>` : ""}`;
+  }
+
+  function renderEnd() {
+    const w = S.winner;
+    const pc = w === null ? "var(--ink)" : PC[w];
+    let title = w === null ? "Berabere!" : esc(S.names[w]) + " kazandı!";
+    let text = w === null
+      ? "İkiniz de " + S.guesses[0].length + " tahminde buldunuz."
+      : esc(S.names[w]) + " sayıyı " + S.guesses[w].length + " tahminde buldu.";
+    if (cpu() && w === 0) { title = "Kazandın!"; text = "Bilgisayarın sayısını " + S.guesses[0].length + " tahminde buldun."; }
+    if (cpu() && w === 1) { text = "Senin sayını " + S.guesses[1].length + " tahminde buldu."; }
+    const item = (p) => `<div class="item" style="--pc:${PC[p]}">
+        <span class="nm"><i></i>${esc(S.names[p])}<small>${S.guesses[p].length} tahmin</small></span>
+        ${tilesHTML(S.secrets[p], Array(L()).fill("g"), "sm win")}
+      </div>`;
+    view.innerHTML = `
+      <section class="card end fade" style="--pc:${pc}">
+        ${TROPHY}
+        <h2>${title}</h2>
+        <p class="lead">${text}</p>
+        <div class="reveal"><span class="label">Gizli sayılar</span>${item(0)}${item(1)}</div>
+        <div class="btns">
+          <button class="btn" id="again" style="--pc:var(--p1)">Rövanş</button>
+          <button class="btn soft" id="menu">Ayarlar</button>
+        </div>
+      </section>`;
+    $("again").onclick = () => { newRound(); render(); };
+    $("menu").onclick = () => { S.phase = "setup"; render(); };
+  }
+
+  /* ---------- Tuş takımı ---------- */
+  function keyStatus(p) {
+    const st = {};
+    for (const g of S.guesses[p]) {
+      [...g.value].forEach((d, i) => {
+        const c = g.colors[i];
+        if (c === "g" || (c === "y" && st[d] !== "g") || (c === "r" && !st[d])) st[d] = c;
+      });
+    }
+    return st;
+  }
+
+  function renderPad() {
+    const on = S.phase === "secret" || (S.phase === "game" && !S.busy && !S.thinking);
+    $("pad-wrap").hidden = !(S.phase === "secret" || S.phase === "game");
+    const p = S.phase === "secret" ? S.secretFor : (cpu() ? 0 : S.turn);
+    const st = S.phase === "game" ? keyStatus(p) : {};
+    const full = S.draft.length >= L();
+    $("pad").style.setProperty("--pc", PC[p]);
+    $("pad").querySelectorAll(".key").forEach((k) => {
+      const v = k.dataset.k;
+      if (v === "ok") {
+        k.textContent = S.phase === "secret" ? "Kaydet" : "Tahmin et";
+        k.disabled = !on || !full;
+      } else if (v === "del") {
+        k.disabled = !on || !S.draft.length;
+      } else {
+        k.className = "key " + (st[v] || "");
+        k.disabled = !on || full || (!S.repeat && S.draft.includes(v));
+      }
+    });
+  }
+
+  function press(k) {
+    if (!(S.phase === "secret" || (S.phase === "game" && !S.busy && !S.thinking))) return;
+    if (k === "del") { S.draft = S.draft.slice(0, -1); render(); return; }
+    if (k === "ok") { submit(); return; }
+    if (!/^\d$/.test(k)) return;
+    if (S.draft.length >= L()) return;
+    if (!S.repeat && S.draft.includes(k)) { shake(); return; }
+    S.draft += k;
+    render();
+  }
+
+  function shake() {
+    const l = $("live");
+    if (!l) return;
+    l.classList.remove("shake"); void l.offsetWidth; l.classList.add("shake");
+  }
+
+  function submit() {
+    if (S.draft.length !== L()) { shake(); return; }
+    if (S.phase === "secret") {
+      S.secrets[S.secretFor] = S.draft;
+      S.draft = ""; S.peek = false;
+      if (cpu()) {
+        S.phase = "game";
+        toast("Bilgisayar da sayısını seçti. İlk tahmin senin!");
+      } else {
+        S.passTo = S.secretFor === 0 ? 1 : "start";
+        S.phase = "pass";
+      }
+      render();
+      return;
+    }
+    const value = S.draft;
+    S.draft = "";
+    applyGuess(S.turn, value);
+  }
+
+  function applyGuess(p, value) {
+    const colors = score(value, S.secrets[1 - p]);
+    S.guesses[p].push({ value, colors });
+    const solved = colors.every((c) => c === "g");
+    if (solved) S.solvedAt[p] = S.guesses[p].length;
+
+    let winner;
+    if (p === 0) {
+      if (solved && !S.fair) winner = 0;
+      else S.turn = 1;
+    } else {
+      if (S.solvedAt[0] !== null) winner = solved ? null : 0;
+      else if (solved) winner = 1;
+      else S.turn = 0;
+    }
+
+    S.busy = true; S.showFor = p; S.animate = true; S.pending = winner;
+    render();
+    setTimeout(finishTurn, solved ? 1400 : 1300);
+  }
+
+  function finishTurn() {
+    if (!S.busy) return;
+    const winner = S.pending;
+    S.busy = false; S.pending = undefined;
+    {
+      if (winner !== undefined) {
+        S.winner = winner;
+        if (winner !== null) S.wins[winner]++;
+        S.phase = "end";
+      } else if (cpu() && S.turn === 1) {
+        S.thinking = true;
+        setTimeout(cpuMove, 700 + Math.random() * 600);
+      } else {
+        toast(cpu() ? "Sıra sende" : "Sıra: " + S.names[S.turn] + (S.turn === 1 && S.solvedAt[0] !== null ? " (son şans!)" : ""));
+      }
+      render();
+    }
+  }
+
+  let tt;
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(tt);
+    tt = setTimeout(() => t.classList.remove("show"), 1600);
+  }
+
+  $("pad").addEventListener("click", (e) => {
+    const k = e.target.closest(".key");
+    if (k && !k.disabled) press(k.dataset.k);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (/^\d$/.test(e.key)) press(e.key);
+    else if (e.key === "Backspace") press("del");
+    else if (e.key === "Enter" && (S.phase === "secret" || S.phase === "game")) { e.preventDefault(); press("ok"); }
+  });
+
+  function render() {
+    document.body.classList.toggle("len5", L() === 5 && S.phase !== "setup");
+    renderScore();
+    ({ setup: renderSetup, secret: renderSecret, pass: renderPass, game: renderGame, end: renderEnd })[S.phase]();
+    renderPad();
+    const live = $("live");
+    if (S.phase === "game" && live) live.scrollIntoView({ block: "nearest" });
+  }
+
+  /* Sayfa güncellenirse oyunu kaldığı yerden sürdür */
+  function start(data) {
+    if (data && data.state) { S = data.state; S.animate = false; }
+    render();
+    if (S.busy) setTimeout(finishTurn, 600);
+    else if (S.thinking) setTimeout(cpuMove, 600);
+  }
+  window.claude?.hot?.snapshot?.(() => ({ state: S }));
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
