@@ -1,6 +1,6 @@
 {
-  "name": "Sayı Tahmin",
-  "short_name": "Sayı Tahmin",
+  "name": "Yeşillet: Gizli Sayı Düellosu",
+  "short_name": "Yeşillet",
   "description": "4 veya 5 haneli gizli sayıyı rakibinden önce bul. Arkadaşınla ya da bilgisayara karşı oyna.",
   "lang": "tr",
   "start_url": "./",
