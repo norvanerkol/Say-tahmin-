@@ -1,4 +1,4 @@
-# Yeşillet
+# All Green
 
 Gizli sayı düellosu. İki oyuncu 4 ya da 5 haneli gizli bir sayı seçer, sonra sırayla rakibin sayısını tahmin eder. Tahmindeki her rakam renklenir:
 
@@ -6,7 +6,7 @@ Gizli sayı düellosu. İki oyuncu 4 ya da 5 haneli gizli bir sayı seçer, sonr
 - 🟨 **Sarı**: rakam sayıda var ama yeri yanlış
 - 🟥 **Kırmızı**: rakam sayıda yok
 
-Bütün kutuları ilk yeşillet, oyunu kazan.
+Bütün kutuları ilk sen yeşile çevir, oyunu kazan.
 
 ## Modlar
 
