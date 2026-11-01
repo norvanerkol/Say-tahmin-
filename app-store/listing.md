@@ -57,7 +57,7 @@ Rakibinin gizli sayısını ilk sen bul! Arkadaşınla aynı telefonda ya da bil
 sayı,tahmin,bulmaca,şifre,kod,rakam,zeka,mantık,iki kişilik,düello,akıl oyunu,kırıcı
 ```
 
-**Açıklama / Description** (1126/4000)
+**Açıklama / Description** (1147/4000)
 ```
 All Green, iki kişilik bir gizli sayı düellosu. Kuralı bir dakikada öğrenirsin, ustalaşmak biraz daha uzun sürer.
 
@@ -80,7 +80,7 @@ KENDİ KURALLARIN
 KOLAY VE KEYİFLİ
 • Büyük, renkli tuş takımı. Denediğin rakamlar tuşlarda da renklenir.
 • Rövanşlar boyunca skor tutulur.
-• Açık ve koyu tema
+• Tek dokunuşla aydınlık ve karanlık mod
 • Türkçe ve İngilizce
 
 REKLAM YOK, VERİ YOK
@@ -111,7 +111,7 @@ Crack your rival's secret number first! Play a friend on one phone or take on th
 number,guess,puzzle,code,logic,brain,digits,two player,duel,cracker,riddle,offline,bulls,cows
 ```
 
-**Açıklama / Description** (1156/4000)
+**Açıklama / Description** (1168/4000)
 ```
 All Green is a secret number duel for two. You'll learn the rules in a minute; mastering them takes a little longer.
 
@@ -134,7 +134,7 @@ YOUR RULES
 EASY TO PICK UP
 • Big, colorful keypad. Digits you've tried get colored on the keys too.
 • Score is kept across rematches.
-• Light and dark theme
+• Light and dark mode with one tap
 • English and Turkish
 
 NO ADS, NO DATA

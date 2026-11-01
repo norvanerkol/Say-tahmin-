@@ -2,7 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>All Green</title>
 <meta name="description" content="Crack your opponent's secret number first. A number duel for two players or against the computer. / Rakibinin gizli sayısını ilk sen bul.">
-<meta name="theme-color" content="#ff6a3d">
+<meta name="theme-color" content="#e9eefa" id="theme-color">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -86,6 +86,8 @@
     border: 2px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px;
     padding: 5px 10px; font-weight: 800; font-size: .85rem; letter-spacing: .06em; box-shadow: 0 2px 0 var(--key-sh);
   }
+  .lang.icon { padding: 4px 7px; line-height: 0; }
+  .lang.icon svg { width: 20px; height: 20px; }
   .foot { display: flex; justify-content: center; gap: 10px; color: var(--muted); font-weight: 700; font-size: .9rem; padding-bottom: 20px; }
   .foot a { color: var(--muted); text-decoration: none; }
   .foot a:hover { color: var(--ink); text-decoration: underline; }
@@ -306,6 +308,7 @@
     </div>
     <div class="top-r">
       <div class="score" id="score"></div>
+      <button class="lang icon" id="theme" type="button"></button>
       <button class="lang" id="lang" type="button">EN</button>
     </div>
   </div>
@@ -393,7 +396,8 @@
       keyHint: "Klavyeyle de oynayabilirsin: rakamlar, Backspace, Enter",
       cpuPicked: "Bilgisayar da sayısını seçti. İlk tahmin senin!", yourTurn: "Sıra sende",
       turnOf: (n) => "Sıra: " + n, lastTry: " (son şans!)",
-      privacy: "Gizlilik", help: "Destek", switchTo: "Switch to English", other: "EN"
+      privacy: "Gizlilik", help: "Destek", switchTo: "Switch to English", other: "EN",
+      toDark: "Karanlık moda geç", toLight: "Aydınlık moda geç"
     },
     en: {
       hero: "Turn them<br><span>all green</span> first.",
@@ -428,7 +432,8 @@
       keyHint: "You can use your keyboard too: digits, Backspace, Enter",
       cpuPicked: "The computer picked its number. You go first!", yourTurn: "Your turn",
       turnOf: (n) => n + "'s turn", lastTry: " (last try!)",
-      privacy: "Privacy", help: "Support", switchTo: "Türkçeye geç", other: "TR"
+      privacy: "Privacy", help: "Support", switchTo: "Türkçeye geç", other: "TR",
+      toDark: "Switch to dark mode", toLight: "Switch to light mode"
     }
   };
   const savedLang = store.get("lang");
@@ -566,6 +571,7 @@
     btn.textContent = T.other;
     btn.setAttribute("aria-label", T.switchTo);
     btn.hidden = S.phase !== "setup";
+    renderThemeBtn();
     if (S.phase === "setup") { el.innerHTML = ""; return; }
     const active = S.phase === "game" ? (S.busy ? S.showFor : S.turn) : -1;
     const chip = (p) => `<span class="chip ${active === p ? "on" : ""}" style="--pc:${PC[p]}"><span class="av">${initial(nm(p))}</span><b>${esc(nm(p))}</b></span>`;
@@ -866,6 +872,39 @@
     else if (e.key === "Backspace") press("del");
     else if (e.key === "Enter" && (S.phase === "secret" || S.phase === "game")) { e.preventDefault(); press("ok"); }
   });
+
+  /* ---------- Aydınlık / karanlık mod ---------- */
+  const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>';
+  const MOON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1z"/></svg>';
+  const darkQuery = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => {
+    const t = document.documentElement.dataset.theme;
+    return t ? t === "dark" : !!(darkQuery && darkQuery.matches);
+  };
+  function applyTheme(t) {
+    if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+    const dark = isDark();
+    $("theme-color")?.setAttribute("content", dark ? "#0e1430" : "#e9eefa");
+    // iPhone uygulamasında saat ve pil yazıları temaya uysun
+    try { window.Capacitor?.Plugins?.StatusBar?.setStyle({ style: dark ? "DARK" : "LIGHT" }); } catch (e) {}
+    renderThemeBtn();
+  }
+  function renderThemeBtn() {
+    const b = $("theme");
+    if (!b) return;
+    const dark = isDark();
+    b.innerHTML = dark ? SUN : MOON;
+    b.setAttribute("aria-label", dark ? T.toLight : T.toDark);
+    b.title = dark ? T.toLight : T.toDark;
+    b.hidden = S.phase !== "setup";
+  }
+  $("theme").addEventListener("click", () => {
+    const next = isDark() ? "light" : "dark";
+    store.set("theme", next);
+    applyTheme(next);
+  });
+  darkQuery?.addEventListener?.("change", () => applyTheme(store.get("theme")));
+  applyTheme(store.get("theme"));
 
   function render() {
     document.documentElement.lang = lang;

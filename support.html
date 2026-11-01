@@ -4,10 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>All Green Destek</title>
-<meta name="theme-color" content="#ff6a3d">
+<meta name="theme-color" content="#e9eefa">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="fonts/fonts.css">
+<script>
+  // Oyunda seçilen aydınlık / karanlık mod burada da geçerli olsun
+  try { const t = JSON.parse(localStorage.getItem("allgreen:theme")); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 <style>
   :root {
     --bg: #e9eefa; --surface: #ffffff; --ink: #1b2340; --muted: #5d6786; --line: #d6dcee;
