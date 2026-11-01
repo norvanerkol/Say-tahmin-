@@ -1,8 +1,8 @@
 {
-  "name": "All Green: Gizli Sayı Düellosu",
+  "name": "All Green",
   "short_name": "All Green",
-  "description": "4 veya 5 haneli gizli sayıyı rakibinden önce bul. Arkadaşınla ya da bilgisayara karşı oyna.",
-  "lang": "tr",
+  "description": "Crack your opponent's secret number first. Rakibinin gizli sayısını ilk sen bul.",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,8 +10,27 @@
   "background_color": "#e9eefa",
   "theme_color": "#ff6a3d",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "games",
+    "puzzle"
   ]
 }

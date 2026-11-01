@@ -1,0 +1,8 @@
+{
+  "appId": "com.norvanerkol.allgreen",
+  "appName": "All Green",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never"
+  }
+}

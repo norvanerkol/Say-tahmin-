@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>All Green Destek</title>
+<meta name="theme-color" content="#ff6a3d">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root {
+    --bg: #e9eefa; --surface: #ffffff; --ink: #1b2340; --muted: #5d6786; --line: #d6dcee;
+    --green: #22a95b; --p1: #ff6a3d; --p2: #2f86ff;
+    --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0e1430; --surface: #182044; --ink: #eef1ff; --muted: #a3acd0; --line: #2a3566; --green: #27b865; --p1: #ff8257; --p2: #5b9dff; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #0e1430; --surface: #182044; --ink: #eef1ff; --muted: #a3acd0; --line: #2a3566; --green: #27b865; --p1: #ff8257; --p2: #5b9dff; color-scheme: dark; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 var(--font-body); padding-inline: 16px; }
+  .wrap { max-width: 680px; margin: 0 auto; padding-block: calc(24px + env(safe-area-inset-top, 0px)) 56px; display: grid; gap: 20px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .brand { font: 800 1.35rem var(--font-display); color: var(--ink); text-decoration: none; display: flex; gap: 8px; align-items: center; }
+  .brand i { width: 10px; height: 14px; border-radius: 3px; display: inline-block; }
+  .brand b { color: var(--green); }
+  .langs { display: flex; gap: 6px; }
+  .langs a { font-weight: 800; font-size: .85rem; letter-spacing: .06em; color: var(--ink); text-decoration: none; border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 4px 10px; }
+  section { background: var(--surface); border-radius: 22px; padding: 24px 22px; display: grid; gap: 4px; }
+  h1 { font: 800 2.2rem/1.1 var(--font-display); margin: 0 0 6px; text-wrap: balance; }
+  h2 { font: 800 1.25rem/1.2 var(--font-display); margin: 18px 0 0; }
+  p, li { max-width: 65ch; }
+  p { margin: 6px 0; }
+  ul { margin: 6px 0; padding-left: 1.2em; }
+  .meta { color: var(--muted); font-weight: 700; font-size: .92rem; }
+  a { color: var(--p2); }
+  .back { font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="./"><span><i style="background:#22a95b"></i> <i style="background:#f2b705"></i> <i style="background:#e5484d"></i></span>All <b>Green</b></a>
+    <nav class="langs"><a href="#tr">TR</a><a href="#en">EN</a></nav>
+  </div>
+
+  <section id="tr" lang="tr">
+    <h1>Destek</h1>
+    <h2>Nasıl oynanır?</h2>
+    <p>Her oyuncu 4 ya da 5 haneli gizli bir sayı seçer. Sonra sırayla rakibin sayısını tahmin edersiniz. Tahmindeki her rakam renklenir:</p>
+    <ul>
+      <li><strong>Yeşil:</strong> rakam doğru, yeri de doğru</li>
+      <li><strong>Sarı:</strong> rakam sayıda var ama yeri yanlış</li>
+      <li><strong>Kırmızı:</strong> rakam sayıda yok</li>
+    </ul>
+    <p>Bütün kutuları ilk yeşile çeviren kazanır.</p>
+    <h2>Sık sorulan sorular</h2>
+    <p><strong>Bilgisayar benim sayımı görüyor mu?</strong><br>Hayır. Bilgisayar sadece senin gibi renk ipuçlarını görerek tahmin yapar.</p>
+    <p><strong>Eşit hak ne demek?</strong><br>İlk başlayan oyuncu sayıyı bulursa diğer oyuncu da bir son tahmin hakkı alır. İkisi de bulursa oyun berabere biter.</p>
+    <p><strong>İnternet gerekiyor mu?</strong><br>Hayır, oyun tamamen çevrimdışı çalışır.</p>
+    <p><strong>Dili nasıl değiştiririm?</strong><br>Ana ekranın sağ üstündeki TR / EN düğmesine dokun.</p>
+    <h2>İletişim</h2>
+    <p>Bir hata bulduysan ya da önerin varsa buraya yaz: <a href="https://github.com/norvanerkol/Say-tahmin-/issues">https://github.com/norvanerkol/Say-tahmin-/issues</a></p>
+  </section>
+
+  <section id="en" lang="en">
+    <h1>Support</h1>
+    <h2>How to play</h2>
+    <p>Each player picks a secret 4- or 5-digit number. Then you take turns guessing your opponent's number. Every digit of a guess gets a color:</p>
+    <ul>
+      <li><strong>Green:</strong> right digit, right spot</li>
+      <li><strong>Yellow:</strong> the digit is in the number, but in a different spot</li>
+      <li><strong>Red:</strong> the digit is not in the number</li>
+    </ul>
+    <p>The first player to turn every tile green wins.</p>
+    <h2>FAQ</h2>
+    <p><strong>Can the computer see my number?</strong><br>No. The computer only sees the same color clues you do.</p>
+    <p><strong>What does "Equal turns" mean?</strong><br>If the first player cracks the number, the other player gets one last guess. If both crack it, the game is a draw.</p>
+    <p><strong>Do I need the internet?</strong><br>No, the game works fully offline.</p>
+    <p><strong>How do I change the language?</strong><br>Tap the TR / EN button in the top right of the start screen.</p>
+    <h2>Contact</h2>
+    <p>Found a bug or have an idea? Write to us here: <a href="https://github.com/norvanerkol/Say-tahmin-/issues">https://github.com/norvanerkol/Say-tahmin-/issues</a></p>
+  </section>
+  <p class="back"><a href="./">← All Green</a></p>
+</div>
+</body>
+</html>

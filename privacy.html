@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>All Green Gizlilik</title>
+<meta name="theme-color" content="#ff6a3d">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root {
+    --bg: #e9eefa; --surface: #ffffff; --ink: #1b2340; --muted: #5d6786; --line: #d6dcee;
+    --green: #22a95b; --p1: #ff6a3d; --p2: #2f86ff;
+    --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0e1430; --surface: #182044; --ink: #eef1ff; --muted: #a3acd0; --line: #2a3566; --green: #27b865; --p1: #ff8257; --p2: #5b9dff; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #0e1430; --surface: #182044; --ink: #eef1ff; --muted: #a3acd0; --line: #2a3566; --green: #27b865; --p1: #ff8257; --p2: #5b9dff; color-scheme: dark; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 var(--font-body); padding-inline: 16px; }
+  .wrap { max-width: 680px; margin: 0 auto; padding-block: calc(24px + env(safe-area-inset-top, 0px)) 56px; display: grid; gap: 20px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .brand { font: 800 1.35rem var(--font-display); color: var(--ink); text-decoration: none; display: flex; gap: 8px; align-items: center; }
+  .brand i { width: 10px; height: 14px; border-radius: 3px; display: inline-block; }
+  .brand b { color: var(--green); }
+  .langs { display: flex; gap: 6px; }
+  .langs a { font-weight: 800; font-size: .85rem; letter-spacing: .06em; color: var(--ink); text-decoration: none; border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 4px 10px; }
+  section { background: var(--surface); border-radius: 22px; padding: 24px 22px; display: grid; gap: 4px; }
+  h1 { font: 800 2.2rem/1.1 var(--font-display); margin: 0 0 6px; text-wrap: balance; }
+  h2 { font: 800 1.25rem/1.2 var(--font-display); margin: 18px 0 0; }
+  p, li { max-width: 65ch; }
+  p { margin: 6px 0; }
+  ul { margin: 6px 0; padding-left: 1.2em; }
+  .meta { color: var(--muted); font-weight: 700; font-size: .92rem; }
+  a { color: var(--p2); }
+  .back { font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="./"><span><i style="background:#22a95b"></i> <i style="background:#f2b705"></i> <i style="background:#e5484d"></i></span>All <b>Green</b></a>
+    <nav class="langs"><a href="#tr">TR</a><a href="#en">EN</a></nav>
+  </div>
+
+  <section id="tr" lang="tr">
+    <h1>Gizlilik Politikası</h1>
+    <p class="meta">Yürürlük tarihi: 1 Kasım 2026</p>
+    <p>All Green, iki kişilik ya da bilgisayara karşı oynanan bir sayı tahmin oyunudur. Oyun hiçbir kişisel veri toplamaz, kimseyle paylaşmaz ve satmaz.</p>
+    <h2>Topladığımız veriler</h2>
+    <p>Hiçbiri. Oyunda hesap, giriş, reklam, analiz aracı veya takip yoktur. Oynamak için internet bağlantısı gerekmez.</p>
+    <h2>Cihazında saklananlar</h2>
+    <p>Bir sonraki açılışta kaldığın yerden devam edebilmen için şu ayarlar <strong>sadece kendi cihazında</strong> saklanır:</p>
+    <ul>
+      <li>Seçtiğin dil</li>
+      <li>Oyuncu adı olarak yazdığın isimler</li>
+      <li>Oyun ayarları (mod, zorluk, hane sayısı, kurallar)</li>
+    </ul>
+    <p>Bu bilgiler cihazından dışarı gönderilmez. Uygulamayı silince hepsi silinir.</p>
+    <h2>Çocuklar</h2>
+    <p>Oyun her yaşa uygundur. Çocuklardan da dahil olmak üzere kimseden veri toplanmaz.</p>
+    <h2>Değişiklikler</h2>
+    <p>Bu politika değişirse güncel hali bu sayfada yayınlanır ve yukarıdaki tarih güncellenir.</p>
+    <h2>İletişim</h2>
+    <p>Soruların için: <a href="https://github.com/norvanerkol/Say-tahmin-/issues">https://github.com/norvanerkol/Say-tahmin-/issues</a></p>
+  </section>
+
+  <section id="en" lang="en">
+    <h1>Privacy Policy</h1>
+    <p class="meta">Effective date: November 1, 2026</p>
+    <p>All Green is a number-guessing game for two players or against the computer. The game does not collect, share or sell any personal data.</p>
+    <h2>Data we collect</h2>
+    <p>None. There are no accounts, sign-ins, ads, analytics or tracking. No internet connection is needed to play.</p>
+    <h2>What is stored on your device</h2>
+    <p>So you can pick up where you left off, these settings are stored <strong>only on your own device</strong>:</p>
+    <ul>
+      <li>Your chosen language</li>
+      <li>The player names you type in</li>
+      <li>Game settings (mode, difficulty, number of digits, rules)</li>
+    </ul>
+    <p>This information never leaves your device. Deleting the app deletes all of it.</p>
+    <h2>Children</h2>
+    <p>The game is suitable for all ages. It collects no data from anyone, including children.</p>
+    <h2>Changes</h2>
+    <p>If this policy changes, the updated version will be posted on this page with a new effective date.</p>
+    <h2>Contact</h2>
+    <p>Questions: <a href="https://github.com/norvanerkol/Say-tahmin-/issues">https://github.com/norvanerkol/Say-tahmin-/issues</a></p>
+  </section>
+  <p class="back"><a href="./">← All Green</a></p>
+</div>
+</body>
+</html>

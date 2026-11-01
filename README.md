@@ -8,12 +8,37 @@ Gizli sayı düellosu. İki oyuncu 4 ya da 5 haneli gizli bir sayı seçer, sonr
 
 Bütün kutuları ilk sen yeşile çevir, oyunu kazan.
 
-## Modlar
+*A secret number duel for two players or against the computer. Available in Turkish and English.*
 
-- **İki kişi:** aynı telefonda sırayla oynanır.
-- **Bilgisayara karşı:** Kolay, Orta ve Zor seviyeleri var.
-- **Ayarlar:** 4 ya da 5 hane, tekrar eden rakam, eşit hak (önce başlayan bulursa rakibe son bir şans).
+## Oyna
 
-## Çalıştırma
+- **Web:** https://norvanerkol.github.io/Say-tahmin-/ (telefonda "Ana Ekrana Ekle" ile uygulama gibi kullanılabilir, internetsiz de çalışır)
+- **iOS:** App Store'a yükleme adımları için [app-store/REHBER.md](app-store/REHBER.md)
 
-Kurulum gerekmez: `index.html` dosyasını tarayıcıda açman yeterli. Bir web sitesinde yayınlandığında telefonun ana ekranına uygulama olarak eklenebilir.
+## Özellikler
+
+- **İki kişi:** aynı telefonda sırayla
+- **Bilgisayara karşı:** Kolay, Orta ve Zor seviyeler
+- **Ayarlar:** 4 ya da 5 hane, tekrar eden rakam, eşit hak
+- **Dil:** Türkçe ve İngilizce (cihaz diline göre otomatik, TR / EN düğmesiyle değiştirilebilir)
+- Reklam, hesap ve veri toplama yok
+
+## Proje yapısı
+
+| Dosya | Ne işe yarar |
+|---|---|
+| `index.html` | Oyunun kendisi (tek dosya, kütüphane yok) |
+| `privacy.html`, `support.html` | Gizlilik politikası ve destek sayfası (TR + EN) |
+| `fonts/` | Baloo 2 ve Nunito fontları (internetsiz çalışma için) |
+| `sw.js`, `manifest.webmanifest` | Web sürümünün çevrimdışı çalışması ve ana ekrana eklenmesi |
+| `ios/` | Capacitor ile oluşturulmuş iOS Xcode projesi |
+| `app-store/` | Mağaza metinleri, ekran görüntüleri ve yükleme rehberi |
+
+## Geliştirme
+
+```bash
+npm install
+npm run ios     # web dosyalarını iOS projesine kopyalar ve Xcode'u açar (Mac gerekir)
+```
+
+Web sürümü için kurulum gerekmez: `index.html` dosyasını tarayıcıda açman yeterli.
