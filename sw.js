@@ -1,6 +1,6 @@
-// All Green: oyunu ilk açılıştan sonra internetsiz de çalıştırır.
+// Dial Duel: oyunu ilk açılıştan sonra internetsiz de çalıştırır.
 // Dosyalar değişince CACHE adındaki sürüm numarasını artır.
-const CACHE = "allgreen-v1";
+const CACHE = "allgreen-v2";
 const FILES = [
   "./",
   "index.html",

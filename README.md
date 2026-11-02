@@ -1,4 +1,4 @@
-# All Green
+# Dial Duel
 
 Gizli sayı düellosu. İki oyuncu 4 ya da 5 haneli gizli bir sayı seçer, sonra sırayla rakibin sayısını tahmin eder. Tahmindeki her rakam renklenir:
 

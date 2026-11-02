@@ -1,4 +1,4 @@
-# All Green'i App Store'a yükleme rehberi
+# Dial Duel'ı App Store'a yükleme rehberi
 
 Bu repoda iOS uygulaması için gereken her şey hazır: Xcode projesi (`ios/`), ikon, açılış ekranı, mağaza metinleri (`app-store/listing.md`), ekran görüntüleri (`app-store/screenshots/`), gizlilik politikası ve destek sayfası.
 
@@ -37,8 +37,8 @@ Son komut web dosyalarını iOS projesine kopyalar ve Xcode'u açar.
 ## 4. App Store Connect'te uygulamayı oluştur
 
 1. https://appstoreconnect.apple.com → **Apps** → **+** → **New App**
-2. Platform: **iOS**, Ad: **All Green**, Birincil dil: **Türkçe**, Bundle ID: Xcode'dakiyle aynısı, SKU: `allgreen-ios`
-3. "All Green" adı alınmışsa `All Green: Sayı Düellosu` ya da `All Green - Number Duel` kullan.
+2. Platform: **iOS**, Ad: **Dial Duel**, Birincil dil: **Türkçe**, Bundle ID: Xcode'dakiyle aynısı, SKU: `allgreen-ios`
+3. "Dial Duel" adı alınmışsa `Dial Duel: Number Game` ya da `Dial Duel - Sayı Oyunu` kullan.
 
 ## 5. Mağaza sayfasını doldur
 

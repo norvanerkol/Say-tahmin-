@@ -1,6 +1,6 @@
 {
   "appId": "com.norvanerkol.allgreen",
-  "appName": "All Green",
+  "appName": "Dial Duel",
   "webDir": "www",
   "ios": {
     "contentInset": "never"

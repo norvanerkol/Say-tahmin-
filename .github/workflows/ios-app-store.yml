@@ -1,4 +1,4 @@
-# All Green iOS uygulamasını GitHub'ın bulut Mac'inde derler ve App Store Connect'e yükler.
+# Dial Duel iOS uygulamasını GitHub'ın bulut Mac'inde derler ve App Store Connect'e yükler.
 # Çalıştırmak için: GitHub → Actions → "iOS App Store" → Run workflow
 #
 # Gereken repo gizlileri (Settings → Secrets and variables → Actions):
@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   ios:
-    runs-on: macos-26
+    runs-on: macos-15
     timeout-minutes: 45
     env:
       HAS_KEYS: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY != '' && secrets.APP_STORE_CONNECT_KEY_ID != '' && secrets.APP_STORE_CONNECT_ISSUER_ID != '' && secrets.APPLE_TEAM_ID != '' }}
@@ -42,8 +42,12 @@ jobs:
           npm run build
           npx cap sync ios
 
-      - name: Xcode sürümü
-        run: xcodebuild -version
+      - name: En yeni Xcode 26'yı seç
+        run: |
+          # App Store, iOS 26 SDK (Xcode 26) ile derlenmiş uygulama istiyor
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; else echo "::warning::Xcode 26 bulunamadı, varsayılan Xcode kullanılıyor"; fi
+          xcodebuild -version
 
       - name: Deneme derlemesi (imzasız)
         if: env.HAS_KEYS != 'true' || !inputs.upload

@@ -1,4 +1,4 @@
-# All Green: App Store bilgileri
+# Dial Duel: App Store bilgileri
 
 Bu dosyadaki metinleri App Store Connect'te ilgili alanlara olduğu gibi kopyalayabilirsin. Karakter sayıları Apple'ın sınırlarına göre kontrol edildi.
 
@@ -39,12 +39,12 @@ Tap TR / EN in the top right of the start screen to switch language.
 
 **Ad / Name** (9/30)
 ```
-All Green
+Dial Duel
 ```
 
-**Alt başlık / Subtitle** (19/30)
+**Alt başlık / Subtitle** (24/30)
 ```
-Gizli sayı düellosu
+Gizli sayıyı ilk sen bul
 ```
 
 **Tanıtım metni / Promotional Text** (136/170)
@@ -52,14 +52,14 @@ Gizli sayı düellosu
 Rakibinin gizli sayısını ilk sen bul! Arkadaşınla aynı telefonda ya da bilgisayara karşı oyna. Reklamsız, internetsiz, tamamen ücretsiz.
 ```
 
-**Anahtar kelimeler / Keywords** (84/100)
+**Anahtar kelimeler / Keywords** (83/100)
 ```
-sayı,tahmin,bulmaca,şifre,kod,rakam,zeka,mantık,iki kişilik,düello,akıl oyunu,kırıcı
+sayı,tahmin,bulmaca,şifre,kod,rakam,zeka,mantık,iki kişilik,kilit,akıl oyunu,kırıcı
 ```
 
 **Açıklama / Description** (1147/4000)
 ```
-All Green, iki kişilik bir gizli sayı düellosu. Kuralı bir dakikada öğrenirsin, ustalaşmak biraz daha uzun sürer.
+Dial Duel, iki kişilik bir gizli sayı düellosu. Kuralı bir dakikada öğrenirsin, ustalaşmak biraz daha uzun sürer.
 
 NASIL OYNANIR
 Her oyuncu 4 ya da 5 haneli gizli bir sayı seçer. Sonra sırayla rakibinin sayısını tahmin edersiniz. Tahmindeki her rakam renklenir:
@@ -93,12 +93,12 @@ Hesap, reklam, takip veya uygulama içi satın alma yok. İnternet gerektirmez. 
 
 **Ad / Name** (9/30)
 ```
-All Green
+Dial Duel
 ```
 
-**Alt başlık / Subtitle** (18/30)
+**Alt başlık / Subtitle** (23/30)
 ```
-Secret number duel
+Crack the secret number
 ```
 
 **Tanıtım metni / Promotional Text** (136/170)
@@ -108,12 +108,12 @@ Crack your rival's secret number first! Play a friend on one phone or take on th
 
 **Anahtar kelimeler / Keywords** (93/100)
 ```
-number,guess,puzzle,code,logic,brain,digits,two player,duel,cracker,riddle,offline,bulls,cows
+number,guess,puzzle,code,logic,brain,digits,two player,lock,cracker,riddle,offline,bulls,cows
 ```
 
 **Açıklama / Description** (1168/4000)
 ```
-All Green is a secret number duel for two. You'll learn the rules in a minute; mastering them takes a little longer.
+Dial Duel is a secret number duel for two. You'll learn the rules in a minute; mastering them takes a little longer.
 
 HOW TO PLAY
 Each player picks a secret 4- or 5-digit number. Then you take turns guessing your opponent's number. Every digit of a guess gets a color:

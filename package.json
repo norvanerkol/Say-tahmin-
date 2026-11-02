@@ -1,8 +1,8 @@
 {
-  "name": "all-green",
+  "name": "dial-duel",
   "version": "1.0.0",
   "private": true,
-  "description": "All Green: gizli sayı düellosu / secret number duel",
+  "description": "Dial Duel: gizli sayı düellosu / secret number duel",
   "scripts": {
     "build": "node scripts/build-www.mjs",
     "ios": "npm run build && npx cap sync ios && npx cap open ios",
