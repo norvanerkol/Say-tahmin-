@@ -20,7 +20,7 @@ Bütün kutuları ilk sen yeşile çevir, oyunu kazan.
 - **İki kişi:** aynı telefonda sırayla
 - **Bilgisayara karşı:** Kolay, Orta ve Zor seviyeler
 - **Ayarlar:** 4 ya da 5 hane, tekrar eden rakam, eşit hak
-- **Dil:** Türkçe ve İngilizce (cihaz diline göre otomatik, TR / EN düğmesiyle değiştirilebilir)
+- **Dil:** İngilizce ve Türkçe (ilk açılışta İngilizce, TR / EN düğmesiyle değiştirilebilir, seçim hatırlanır)
 - Reklam, hesap ve veri toplama yok
 
 ## Proje yapısı

@@ -436,9 +436,9 @@
       toDark: "Switch to dark mode", toLight: "Switch to light mode"
     }
   };
+  // İlk açılış İngilizce; TR / EN düğmesiyle seçilen dil hatırlanır
   const savedLang = store.get("lang");
-  const deviceLang = (navigator.language || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
-  let lang = I18N[savedLang] ? savedLang : deviceLang;
+  let lang = I18N[savedLang] ? savedLang : "en";
   let T = I18N[lang];
   const upper = (s) => s.toLocaleUpperCase(lang === "tr" ? "tr" : "en");
   const initial = (n) => esc(upper(n.trim()[0] || "?"));
